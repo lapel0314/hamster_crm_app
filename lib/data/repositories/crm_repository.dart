@@ -3,23 +3,35 @@ import 'package:hamster_crm_app/data/models/customer.dart';
 import 'package:hamster_crm_app/data/models/prospect.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-class CrmRepository {
+abstract class CrmStore {
+  Future<int> addCustomer(Customer customer);
+  Future<int> addProspect(Prospect prospect);
+  Future<List<Customer>> customers({String query = ''});
+  Future<List<Prospect>> prospects({String query = ''});
+  Future<void> softDeleteCustomer(int id);
+  Future<DashboardSummary> dashboardSummary();
+}
+
+class CrmRepository implements CrmStore {
   CrmRepository(this.database);
 
   final AppDatabase database;
 
+  @override
   Future<int> addCustomer(Customer customer) async {
     final db = await database.instance;
     final values = customer.toMap()..remove('id');
     return db.insert('customers', values);
   }
 
+  @override
   Future<int> addProspect(Prospect prospect) async {
     final db = await database.instance;
     final values = prospect.toMap()..remove('id');
     return db.insert('prospects', values);
   }
 
+  @override
   Future<List<Customer>> customers({String query = ''}) async {
     final db = await database.instance;
     final where = _searchWhere(query, [
@@ -38,6 +50,7 @@ class CrmRepository {
     return rows.map(Customer.fromMap).toList();
   }
 
+  @override
   Future<List<Prospect>> prospects({String query = ''}) async {
     final db = await database.instance;
     final where = _searchWhere(query, [
@@ -56,6 +69,7 @@ class CrmRepository {
     return rows.map(Prospect.fromMap).toList();
   }
 
+  @override
   Future<void> softDeleteCustomer(int id) async {
     final db = await database.instance;
     await db.update(
@@ -66,6 +80,7 @@ class CrmRepository {
     );
   }
 
+  @override
   Future<DashboardSummary> dashboardSummary() async {
     final db = await database.instance;
     final monthPrefix = DateTime.now().toIso8601String().substring(0, 7);
@@ -122,17 +137,200 @@ class CrmRepository {
   }
 
   List<RankItem> _ranking(Iterable<String> values) {
-    final counts = <String, int>{};
-    for (final value in values) {
-      final key = value.trim();
-      if (key.isEmpty) continue;
-      counts[key] = (counts[key] ?? 0) + 1;
-    }
-    final items = counts.entries
-        .map((e) => RankItem(label: e.key, count: e.value))
+    return buildRanking(values);
+  }
+}
+
+class InMemoryCrmRepository implements CrmStore {
+  InMemoryCrmRepository({List<Customer>? customers, List<Prospect>? prospects})
+    : _customers = [...?customers],
+      _prospects = [...?prospects];
+
+  factory InMemoryCrmRepository.seeded() {
+    final now = DateTime.now();
+    final today = now.toIso8601String().substring(0, 10);
+    final createdAt = now.toIso8601String();
+    return InMemoryCrmRepository(
+      customers: [
+        Customer(
+          id: 1,
+          date: today,
+          customerName: '김우주',
+          gender: '여',
+          phone: '010-1234-5678',
+          adoption: '골든햄스터',
+          purchase: '케이지 세트',
+          revenue: 180000,
+          cost: 95000,
+          memo: '처음 키우는 고객, 사육 안내 필요',
+          createdAt: createdAt,
+          updatedAt: createdAt,
+        ),
+        Customer(
+          id: 2,
+          date: today,
+          customerName: '박보리',
+          gender: '남',
+          phone: '010-7777-1020',
+          adoption: '드워프',
+          purchase: '사료/베딩',
+          revenue: 90000,
+          cost: 42000,
+          memo: '토요일 재방문 예정',
+          createdAt: createdAt,
+          updatedAt: createdAt,
+        ),
+      ],
+      prospects: [
+        Prospect(
+          id: 1,
+          consultationDate: today,
+          visitDate: today,
+          customerName: '이모카',
+          phone: '010-9000-8811',
+          adoption: '펄 드워프',
+          memo: '방문 전 사진 요청',
+          createdAt: createdAt,
+          updatedAt: createdAt,
+        ),
+      ],
+    );
+  }
+
+  final List<Customer> _customers;
+  final List<Prospect> _prospects;
+  int _nextCustomerId = 100;
+  int _nextProspectId = 100;
+
+  @override
+  Future<int> addCustomer(Customer customer) async {
+    final id = _nextCustomerId++;
+    _customers.add(_copyCustomer(customer, id));
+    return id;
+  }
+
+  @override
+  Future<int> addProspect(Prospect prospect) async {
+    final id = _nextProspectId++;
+    _prospects.add(_copyProspect(prospect, id));
+    return id;
+  }
+
+  @override
+  Future<List<Customer>> customers({String query = ''}) async {
+    final filtered = _customers
+        .where((c) => c.deletedAt == null && _matchesCustomer(c, query))
         .toList();
-    items.sort((a, b) => b.count.compareTo(a.count));
-    return items.take(5).toList();
+    filtered.sort((a, b) => b.date.compareTo(a.date));
+    return filtered;
+  }
+
+  @override
+  Future<List<Prospect>> prospects({String query = ''}) async {
+    final filtered = _prospects
+        .where((p) => p.deletedAt == null && _matchesProspect(p, query))
+        .toList();
+    filtered.sort((a, b) => b.consultationDate.compareTo(a.consultationDate));
+    return filtered;
+  }
+
+  @override
+  Future<void> softDeleteCustomer(int id) async {
+    final index = _customers.indexWhere((c) => c.id == id);
+    if (index == -1) return;
+    _customers[index] = _copyCustomer(
+      _customers[index],
+      id,
+      deletedAt: DateTime.now().toIso8601String(),
+    );
+  }
+
+  @override
+  Future<DashboardSummary> dashboardSummary() async {
+    final activeCustomers = await customers();
+    final activeProspects = await prospects();
+    final monthPrefix = DateTime.now().toIso8601String().substring(0, 7);
+    final monthly = List.generate(12, (i) => MonthlySettlement(month: i + 1));
+    for (final customer in activeCustomers) {
+      final month = int.tryParse(
+        customer.date.split('-').elementAtOrNull(1) ?? '',
+      );
+      if (month == null || month < 1 || month > 12) continue;
+      monthly[month - 1] = monthly[month - 1].add(customer);
+    }
+    final currentMonth = activeCustomers
+        .where((c) => c.date.startsWith(monthPrefix))
+        .toList();
+    return DashboardSummary(
+      totalCustomers: activeCustomers.length,
+      totalProspects: activeProspects.length,
+      monthRevenue: currentMonth.fold(0, (sum, c) => sum + c.revenue),
+      monthCost: currentMonth.fold(0, (sum, c) => sum + c.cost),
+      monthly: monthly,
+      adoptionRanking: buildRanking(currentMonth.map((c) => c.adoption)),
+      purchaseRanking: buildRanking(currentMonth.map((c) => c.purchase)),
+    );
+  }
+
+  bool _matchesCustomer(Customer c, String query) {
+    final q = query.trim();
+    if (q.isEmpty) return true;
+    return [
+      c.customerName,
+      c.phone,
+      c.adoption,
+      c.purchase,
+      c.memo,
+    ].any((value) => value.contains(q));
+  }
+
+  bool _matchesProspect(Prospect p, String query) {
+    final q = query.trim();
+    if (q.isEmpty) return true;
+    return [
+      p.customerName,
+      p.phone,
+      p.adoption,
+      p.purchase,
+      p.memo,
+    ].any((value) => value.contains(q));
+  }
+
+  Customer _copyCustomer(Customer c, int id, {String? deletedAt}) {
+    return Customer(
+      id: id,
+      date: c.date,
+      customerName: c.customerName,
+      gender: c.gender,
+      phone: c.phone,
+      adoption: c.adoption,
+      purchase: c.purchase,
+      revenue: c.revenue,
+      cost: c.cost,
+      memo: c.memo,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      deletedAt: deletedAt ?? c.deletedAt,
+    );
+  }
+
+  Prospect _copyProspect(Prospect p, int id) {
+    return Prospect(
+      id: id,
+      consultationDate: p.consultationDate,
+      visitDate: p.visitDate,
+      customerName: p.customerName,
+      gender: p.gender,
+      phone: p.phone,
+      adoption: p.adoption,
+      purchase: p.purchase,
+      revenue: p.revenue,
+      cost: p.cost,
+      memo: p.memo,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      deletedAt: p.deletedAt,
+    );
   }
 }
 
@@ -191,4 +389,18 @@ class RankItem {
   final int count;
 
   const RankItem({required this.label, required this.count});
+}
+
+List<RankItem> buildRanking(Iterable<String> values) {
+  final counts = <String, int>{};
+  for (final value in values) {
+    final key = value.trim();
+    if (key.isEmpty) continue;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  final items = counts.entries
+      .map((e) => RankItem(label: e.key, count: e.value))
+      .toList();
+  items.sort((a, b) => b.count.compareTo(a.count));
+  return items.take(5).toList();
 }

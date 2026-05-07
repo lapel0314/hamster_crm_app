@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hamster_crm_app/core/database/app_database.dart';
@@ -7,13 +8,16 @@ import 'package:hamster_crm_app/data/models/prospect.dart';
 import 'package:hamster_crm_app/data/repositories/crm_repository.dart';
 
 void main() {
-  runApp(HamsterCrmApp(repository: CrmRepository(AppDatabase())));
+  final CrmStore repository = kIsWeb
+      ? InMemoryCrmRepository.seeded()
+      : CrmRepository(AppDatabase());
+  runApp(HamsterCrmApp(repository: repository));
 }
 
 class HamsterCrmApp extends StatelessWidget {
   const HamsterCrmApp({super.key, required this.repository});
 
-  final CrmRepository repository;
+  final CrmStore repository;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +33,7 @@ class HamsterCrmApp extends StatelessWidget {
 class HamsterHomePage extends StatefulWidget {
   const HamsterHomePage({super.key, required this.repository});
 
-  final CrmRepository repository;
+  final CrmStore repository;
 
   @override
   State<HamsterHomePage> createState() => _HamsterHomePageState();
@@ -285,7 +289,7 @@ class CustomerFormPage extends StatefulWidget {
     required this.onSaved,
   });
 
-  final CrmRepository repository;
+  final CrmStore repository;
   final VoidCallback onSaved;
 
   @override
@@ -471,7 +475,7 @@ class ProspectsPage extends StatefulWidget {
     required this.onChanged,
   });
 
-  final CrmRepository repository;
+  final CrmStore repository;
   final List<Prospect> prospects;
   final TextEditingController searchController;
   final VoidCallback onChanged;
