@@ -231,15 +231,6 @@ class _Sidebar extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    '\uB85C\uCEEC \uC624\uD504\uB77C\uC778\uC73C\uB85C \uACE0\uAC1D \uAE30\uB85D\uC744 \uC548\uC804\uD558\uAC8C \uAD00\uB9AC\uD569\uB2C8\uB2E4.',
-                    style: TextStyle(
-                      color: HamsterColors.cream,
-                      height: 1.45,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -281,38 +272,6 @@ class _Sidebar extends StatelessWidget {
                   ),
                 ),
               ),
-            const SizedBox(height: 18),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: HamsterColors.cream.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '\uC624\uB298 \uD560 \uC77C',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '\uACE0\uAC1D \uB4F1\uB85D \u2192 \uC0C1\uB2F4 \uBA54\uBAA8 \u2192 \uACE0\uAC1DDB \uD655\uC778',
-                    style: TextStyle(color: HamsterColors.cream, height: 1.45),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              '\uD63C\uC790 \uC4F0\uB294 PC\uC6A9 \u00B7 \uB85C\uADF8\uC778 \uC5C6\uC774 \uBC14\uB85C \uC2DC\uC791',
-              style: TextStyle(color: HamsterColors.cream, height: 1.5),
-            ),
           ],
         ),
       ),
