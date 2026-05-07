@@ -633,22 +633,6 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 980;
-        final form = _CustomerEntryCard(
-          date: date,
-          onDateChanged: (v) => setState(() => date = v),
-          name: name,
-          gender: gender,
-          onGenderChanged: (v) => setState(() => gender = v),
-          phone: phone,
-          adoption: adoption,
-          purchase: purchase,
-          revenue: revenue,
-          cost: cost,
-          memo: memo,
-        );
-        final actions = _CustomerEntryActions(onSave: _save, onClear: _clear);
-
         return ListView(
           children: [
             Row(
@@ -673,38 +657,44 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                     ],
                   ),
                 ),
-                if (wide)
-                  FilledButton.icon(
-                    onPressed: _save,
-                    icon: const Icon(Icons.save_rounded),
-                    label: const Text('\uACE0\uAC1D \uC800\uC7A5'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(150, 54),
-                      textStyle: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
+                const SizedBox(width: 16),
+                OutlinedButton.icon(
+                  onPressed: _clear,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('\uC785\uB825 \uCD08\uAE30\uD654'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(130, 52),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w800),
                   ),
+                ),
+                const SizedBox(width: 10),
+                FilledButton.icon(
+                  onPressed: _save,
+                  icon: const Icon(Icons.save_rounded),
+                  label: const Text('\uACE0\uAC1D \uC800\uC7A5'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(130, 52),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 18),
-            if (wide)
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(flex: 7, child: form),
-                    const SizedBox(width: 18),
-                    Expanded(flex: 3, child: actions),
-                  ],
-                ),
-              )
-            else ...[
-              form,
-              const SizedBox(height: 16),
-              actions,
-            ],
+            _CustomerEntryCard(
+              date: date,
+              onDateChanged: (v) => setState(() => date = v),
+              name: name,
+              gender: gender,
+              onGenderChanged: (v) => setState(() => gender = v),
+              phone: phone,
+              adoption: adoption,
+              purchase: purchase,
+              revenue: revenue,
+              cost: cost,
+              memo: memo,
+            ),
+            const SizedBox(height: 16),
+            _CustomerEntryActions(onSave: _save, onClear: _clear),
           ],
         );
       },
@@ -747,11 +737,7 @@ class _CustomerEntryCard extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             const gap = 16.0;
-            final columns = constraints.maxWidth >= 760
-                ? 4
-                : constraints.maxWidth >= 520
-                ? 2
-                : 1;
+            final columns = (constraints.maxWidth / 236).floor().clamp(1, 4);
             final fieldWidth =
                 (constraints.maxWidth - gap * (columns - 1)) / columns;
 
