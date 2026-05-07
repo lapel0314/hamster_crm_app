@@ -490,7 +490,7 @@ class _MonthlyValueLegend extends StatelessWidget {
               border: Border.all(color: HamsterColors.line),
             ),
             child: Text(
-              '${item.month}\uC6D4 \uBD84${item.adoptionCount} \uAD6C${item.purchaseCount}',
+              '${item.month}\uC6D4 \uBD84\uC591 ${item.adoptionCount} \u00B7 \uAD6C\uB9E4 ${item.purchaseCount}',
               style: const TextStyle(
                 color: HamsterColors.brown,
                 fontSize: 11,
@@ -510,10 +510,7 @@ class _SettlementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat.compactCurrency(
-      locale: 'ko_KR',
-      symbol: '\u20A9',
-    );
+    final money = NumberFormat('#,###\uC6D0');
     final yearRevenue = monthly.fold<int>(0, (sum, item) => sum + item.revenue);
     final yearCost = monthly.fold<int>(0, (sum, item) => sum + item.cost);
     final yearProfit = yearRevenue - yearCost;
@@ -524,123 +521,62 @@ class _SettlementCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '\uC815\uC0B0\uD604\uD669',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: yearProfit >= 0
-                        ? HamsterColors.mint.withValues(alpha: 0.45)
-                        : Colors.redAccent.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '\uC21C\uC775 ${money.format(yearProfit)}',
-                    style: TextStyle(
-                      color: yearProfit >= 0
-                          ? HamsterColors.brown
-                          : Colors.redAccent,
-                      fontWeight: FontWeight.w900,
+            Text(
+              '\uC815\uC0B0\uD604\uD669',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            _SettlementLine(
+              label: '\uB9E4\uCD9C',
+              value: money.format(yearRevenue),
+              color: HamsterColors.gold,
+            ),
+            const SizedBox(height: 8),
+            _SettlementLine(
+              label: '\uC6D0\uAC00',
+              value: money.format(yearCost),
+              color: HamsterColors.softBrown,
+            ),
+            const SizedBox(height: 8),
+            _SettlementLine(
+              label: '\uC190\uC775',
+              value: money.format(yearProfit),
+              color: yearProfit >= 0 ? HamsterColors.mint : Colors.redAccent,
+              emphasize: true,
+            ),
+            const SizedBox(height: 14),
+            const Divider(height: 1, color: HamsterColors.line),
+            const SizedBox(height: 10),
+            ...monthly
+                .where((m) => m.revenue != 0 || m.cost != 0)
+                .map(
+                  (m) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: m.month == DateTime.now().month
+                            ? HamsterColors.cream.withValues(alpha: 0.55)
+                            : HamsterColors.input,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: HamsterColors.line),
+                      ),
+                      child: Text(
+                        '${m.month}\uC6D4  \uB9E4\uCD9C ${money.format(m.revenue)} / \uC6D0\uAC00 ${money.format(m.cost)} / \uC190\uC775 ${money.format(m.profit)}',
+                        style: TextStyle(
+                          color: m.profit >= 0
+                              ? HamsterColors.brown
+                              : Colors.redAccent,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _SettlementSummaryTile(
-                    label: '\uB9E4\uCD9C',
-                    value: money.format(yearRevenue),
-                    color: HamsterColors.gold,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _SettlementSummaryTile(
-                    label: '\uC6D0\uAC00',
-                    value: money.format(yearCost),
-                    color: HamsterColors.softBrown,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingRowHeight: 36,
-                dataRowMinHeight: 38,
-                dataRowMaxHeight: 38,
-                horizontalMargin: 10,
-                columnSpacing: 18,
-                dividerThickness: 0.8,
-                headingTextStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: HamsterColors.brown,
-                ),
-                dataTextStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: HamsterColors.brown,
-                ),
-                columns: const [
-                  DataColumn(label: Text('\uC6D4')),
-                  DataColumn(label: Text('\uBD84\uC591')),
-                  DataColumn(label: Text('\uAD6C\uB9E4')),
-                  DataColumn(label: Text('\uB9E4\uCD9C')),
-                  DataColumn(label: Text('\uC6D0\uAC00')),
-                  DataColumn(label: Text('\uC21C\uC775')),
-                ],
-                rows: monthly
-                    .map(
-                      (m) => DataRow(
-                        color: WidgetStateProperty.resolveWith(
-                          (_) => m.month == DateTime.now().month
-                              ? HamsterColors.cream.withValues(alpha: 0.45)
-                              : null,
-                        ),
-                        cells: [
-                          DataCell(
-                            Text(
-                              '${m.month}\uC6D4',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                          DataCell(Text('${m.adoptionCount}')),
-                          DataCell(Text('${m.purchaseCount}')),
-                          DataCell(Text(money.format(m.revenue))),
-                          DataCell(Text(money.format(m.cost))),
-                          DataCell(
-                            Text(
-                              money.format(m.profit),
-                              style: TextStyle(
-                                color: m.profit >= 0
-                                    ? HamsterColors.brown
-                                    : Colors.redAccent,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
           ],
         ),
       ),
@@ -648,44 +584,51 @@ class _SettlementCard extends StatelessWidget {
   }
 }
 
-class _SettlementSummaryTile extends StatelessWidget {
-  const _SettlementSummaryTile({
+class _SettlementLine extends StatelessWidget {
+  const _SettlementLine({
     required this.label,
     required this.value,
     required this.color,
+    this.emphasize = false,
   });
 
   final String label;
   final String value;
   final Color color;
+  final bool emphasize;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
+        color: color.withValues(alpha: emphasize ? 0.32 : 0.18),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.45)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: HamsterColors.softBrown,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
+          SizedBox(
+            width: 52,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: HamsterColors.softBrown,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: HamsterColors.brown,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: HamsterColors.brown,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
