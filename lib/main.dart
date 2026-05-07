@@ -635,11 +635,21 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     );
     widget.onSaved();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            '\uACE0\uAC1DDB\uC5D0 \uC800\uC7A5\uD588\uC2B5\uB2C8\uB2E4.',
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text(
+            '\uD310\uB9E4\uB97C \uCD95\uD558\uD569\uB2C8\uB2E4',
           ),
+          content: const Text(
+            '\uACE0\uAC1D \uB4F1\uB85D\uC774 \uC644\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('\uD655\uC778'),
+            ),
+          ],
         ),
       );
     }
@@ -1055,9 +1065,9 @@ class CustomerDbPage extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('\uACE0\uAC1D \uC218\uC815'),
-        content: Text(
-          '${customer.customerName} \uACE0\uAC1D\uC744 \uC0AD\uC81C\uD560\uAE4C\uC694?\n\uC0AD\uC81C\uD55C \uB370\uC774\uD130\uB294 \uC77C\uBC18 \uBAA9\uB85D\uC5D0\uC11C \uC228\uACA8\uC9D1\uB2C8\uB2E4.',
+        title: const Text('\uC0AD\uC81C \uD655\uC778'),
+        content: const Text(
+          '\uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?',
         ),
         actions: [
           TextButton(
@@ -1066,7 +1076,7 @@ class CustomerDbPage extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('\uCDE8\uC18C'),
+            child: const Text('\uD655\uC778'),
           ),
         ],
       ),
@@ -1677,9 +1687,9 @@ class _ProspectsPageState extends State<ProspectsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('\uAC00\uB9DD\uACE0\uAC1D \uC0AD\uC81C'),
-        content: Text(
-          '${prospect.customerName} \uAC00\uB9DD\uACE0\uAC1D\uC744 \uC0AD\uC81C\uD560\uAE4C\uC694?\n\uC0AD\uC81C\uD55C \uB370\uC774\uD130\uB294 \uC77C\uBC18 \uBAA9\uB85D\uC5D0\uC11C \uC228\uACA8\uC9D1\uB2C8\uB2E4.',
+        title: const Text('\uC0AD\uC81C \uD655\uC778'),
+        content: const Text(
+          '\uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?',
         ),
         actions: [
           TextButton(
@@ -1688,7 +1698,7 @@ class _ProspectsPageState extends State<ProspectsPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('\uCDE8\uC18C'),
+            child: const Text('\uD655\uC778'),
           ),
         ],
       ),
