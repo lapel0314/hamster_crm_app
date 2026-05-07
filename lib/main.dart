@@ -1870,7 +1870,7 @@ class _ProspectsPageState extends State<ProspectsPage> {
                   horizontalMargin: 8,
                   columnSpacing: 12,
                   columns: const [
-                    DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 160)),
+                    DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 106)),
                     DataColumn(
                       label: _TableHeader(
                         '\uC0C1\uB2F4\uB0A0\uC9DC',
