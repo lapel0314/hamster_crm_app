@@ -46,7 +46,6 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
   final searchController = TextEditingController();
 
   Future<_HomeData> _load() async {
-    await widget.repository.purgeDeletedOlderThan(const Duration(days: 30));
     return _HomeData(
       summary: await widget.repository.dashboardSummary(),
       customers: await widget.repository.customers(
@@ -1977,7 +1976,7 @@ class TrashPage extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         const Text(
-          '30\uC77C\uC774 \uC9C0\uB09C \uC0AD\uC81C \uB370\uC774\uD130\uB294 \uC571 \uC2E4\uD589 \uC2DC \uC790\uB3D9\uC73C\uB85C \uC644\uC804 \uC0AD\uC81C\uB429\uB2C8\uB2E4.',
+          '\uD544\uC694\uD560 \uB54C \uC218\uB3D9\uC73C\uB85C \uBCF5\uAD6C\uD558\uAC70\uB098 \uC644\uC804 \uC0AD\uC81C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.',
           style: TextStyle(
             color: HamsterColors.softBrown,
             fontWeight: FontWeight.w700,

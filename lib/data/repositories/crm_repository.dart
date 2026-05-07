@@ -18,7 +18,6 @@ abstract class CrmStore {
   Future<void> restoreProspect(int id);
   Future<void> hardDeleteCustomer(int id);
   Future<void> hardDeleteProspect(int id);
-  Future<void> purgeDeletedOlderThan(Duration age);
   Future<DashboardSummary> dashboardSummary();
 }
 
@@ -175,22 +174,6 @@ class CrmRepository implements CrmStore {
   Future<void> hardDeleteProspect(int id) async {
     final db = await database.instance;
     await db.delete('prospects', where: 'id = ?', whereArgs: [id]);
-  }
-
-  @override
-  Future<void> purgeDeletedOlderThan(Duration age) async {
-    final db = await database.instance;
-    final cutoff = DateTime.now().subtract(age).toIso8601String();
-    await db.delete(
-      'customers',
-      where: 'deleted_at IS NOT NULL AND deleted_at < ?',
-      whereArgs: [cutoff],
-    );
-    await db.delete(
-      'prospects',
-      where: 'deleted_at IS NOT NULL AND deleted_at < ?',
-      whereArgs: [cutoff],
-    );
   }
 
   @override
@@ -425,23 +408,6 @@ class InMemoryCrmRepository implements CrmStore {
   @override
   Future<void> hardDeleteProspect(int id) async {
     _prospects.removeWhere((p) => p.id == id);
-  }
-
-  @override
-  Future<void> purgeDeletedOlderThan(Duration age) async {
-    final cutoff = DateTime.now().subtract(age);
-    _customers.removeWhere((c) {
-      final deletedAt = c.deletedAt == null
-          ? null
-          : DateTime.tryParse(c.deletedAt!);
-      return deletedAt != null && deletedAt.isBefore(cutoff);
-    });
-    _prospects.removeWhere((p) {
-      final deletedAt = p.deletedAt == null
-          ? null
-          : DateTime.tryParse(p.deletedAt!);
-      return deletedAt != null && deletedAt.isBefore(cutoff);
-    });
   }
 
   @override

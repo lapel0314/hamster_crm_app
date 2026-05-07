@@ -111,7 +111,7 @@ void main() {
     expect(await repository.deletedProspects(), hasLength(1));
   });
 
-  test('restores hard deletes and purges trash records', () async {
+  test('restores and hard deletes trash records', () async {
     const now = '2026-05-07T00:00:00';
     final customerId = await repository.addCustomer(
       const Customer(
@@ -142,30 +142,6 @@ void main() {
     await repository.softDeleteProspect(prospectId);
     await repository.hardDeleteCustomer(customerId);
     await repository.hardDeleteProspect(prospectId);
-
-    expect(await repository.deletedCustomers(), isEmpty);
-    expect(await repository.deletedProspects(), isEmpty);
-
-    await repository.addCustomer(
-      const Customer(
-        date: '2026-05-07',
-        customerName: '오래된삭제고객',
-        createdAt: now,
-        updatedAt: now,
-        deletedAt: '2026-01-01T00:00:00',
-      ),
-    );
-    await repository.addProspect(
-      const Prospect(
-        consultationDate: '2026-05-07',
-        customerName: '오래된삭제가망',
-        createdAt: now,
-        updatedAt: now,
-        deletedAt: '2026-01-01T00:00:00',
-      ),
-    );
-
-    await repository.purgeDeletedOlderThan(const Duration(days: 30));
 
     expect(await repository.deletedCustomers(), isEmpty);
     expect(await repository.deletedProspects(), isEmpty);
