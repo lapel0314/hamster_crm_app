@@ -8,7 +8,10 @@ abstract class CrmStore {
   Future<int> addProspect(Prospect prospect);
   Future<List<Customer>> customers({String query = ''});
   Future<List<Prospect>> prospects({String query = ''});
+  Future<void> updateCustomer(Customer customer);
+  Future<void> updateProspect(Prospect prospect);
   Future<void> softDeleteCustomer(int id);
+  Future<void> softDeleteProspect(int id);
   Future<DashboardSummary> dashboardSummary();
 }
 
@@ -70,10 +73,41 @@ class CrmRepository implements CrmStore {
   }
 
   @override
+  Future<void> updateCustomer(Customer customer) async {
+    final id = customer.id;
+    if (id == null) return;
+    final db = await database.instance;
+    final values = customer.toMap()..remove('id');
+    values['updated_at'] = DateTime.now().toIso8601String();
+    await db.update('customers', values, where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<void> updateProspect(Prospect prospect) async {
+    final id = prospect.id;
+    if (id == null) return;
+    final db = await database.instance;
+    final values = prospect.toMap()..remove('id');
+    values['updated_at'] = DateTime.now().toIso8601String();
+    await db.update('prospects', values, where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
   Future<void> softDeleteCustomer(int id) async {
     final db = await database.instance;
     await db.update(
       'customers',
+      {'deleted_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  @override
+  Future<void> softDeleteProspect(int id) async {
+    final db = await database.instance;
+    await db.update(
+      'prospects',
       {'deleted_at': DateTime.now().toIso8601String()},
       where: 'id = ?',
       whereArgs: [id],
@@ -235,11 +269,40 @@ class InMemoryCrmRepository implements CrmStore {
   }
 
   @override
+  Future<void> updateCustomer(Customer customer) async {
+    final id = customer.id;
+    if (id == null) return;
+    final index = _customers.indexWhere((c) => c.id == id);
+    if (index == -1) return;
+    _customers[index] = customer;
+  }
+
+  @override
+  Future<void> updateProspect(Prospect prospect) async {
+    final id = prospect.id;
+    if (id == null) return;
+    final index = _prospects.indexWhere((p) => p.id == id);
+    if (index == -1) return;
+    _prospects[index] = prospect;
+  }
+
+  @override
   Future<void> softDeleteCustomer(int id) async {
     final index = _customers.indexWhere((c) => c.id == id);
     if (index == -1) return;
     _customers[index] = _copyCustomer(
       _customers[index],
+      id,
+      deletedAt: DateTime.now().toIso8601String(),
+    );
+  }
+
+  @override
+  Future<void> softDeleteProspect(int id) async {
+    final index = _prospects.indexWhere((p) => p.id == id);
+    if (index == -1) return;
+    _prospects[index] = _copyProspect(
+      _prospects[index],
       id,
       deletedAt: DateTime.now().toIso8601String(),
     );
@@ -314,7 +377,7 @@ class InMemoryCrmRepository implements CrmStore {
     );
   }
 
-  Prospect _copyProspect(Prospect p, int id) {
+  Prospect _copyProspect(Prospect p, int id, {String? deletedAt}) {
     return Prospect(
       id: id,
       consultationDate: p.consultationDate,
@@ -329,7 +392,7 @@ class InMemoryCrmRepository implements CrmStore {
       memo: p.memo,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
-      deletedAt: p.deletedAt,
+      deletedAt: deletedAt ?? p.deletedAt,
     );
   }
 }

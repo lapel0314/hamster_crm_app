@@ -31,6 +31,38 @@ class Customer {
 
   int get profit => revenue - cost;
 
+  Customer copyWith({
+    int? id,
+    String? date,
+    String? customerName,
+    String? gender,
+    String? phone,
+    String? adoption,
+    String? purchase,
+    int? revenue,
+    int? cost,
+    String? memo,
+    String? createdAt,
+    String? updatedAt,
+    String? deletedAt,
+  }) {
+    return Customer(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      customerName: customerName ?? this.customerName,
+      gender: gender ?? this.gender,
+      phone: phone ?? this.phone,
+      adoption: adoption ?? this.adoption,
+      purchase: purchase ?? this.purchase,
+      revenue: revenue ?? this.revenue,
+      cost: cost ?? this.cost,
+      memo: memo ?? this.memo,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
+  }
+
   Map<String, Object?> toMap() {
     return {
       'id': id,

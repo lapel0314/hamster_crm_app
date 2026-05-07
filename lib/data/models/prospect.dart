@@ -31,6 +31,40 @@ class Prospect {
     this.deletedAt,
   });
 
+  Prospect copyWith({
+    int? id,
+    String? consultationDate,
+    String? visitDate,
+    String? customerName,
+    String? gender,
+    String? phone,
+    String? adoption,
+    String? purchase,
+    int? revenue,
+    int? cost,
+    String? memo,
+    String? createdAt,
+    String? updatedAt,
+    String? deletedAt,
+  }) {
+    return Prospect(
+      id: id ?? this.id,
+      consultationDate: consultationDate ?? this.consultationDate,
+      visitDate: visitDate ?? this.visitDate,
+      customerName: customerName ?? this.customerName,
+      gender: gender ?? this.gender,
+      phone: phone ?? this.phone,
+      adoption: adoption ?? this.adoption,
+      purchase: purchase ?? this.purchase,
+      revenue: revenue ?? this.revenue,
+      cost: cost ?? this.cost,
+      memo: memo ?? this.memo,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
+  }
+
   Map<String, Object?> toMap() {
     return {
       'id': id,

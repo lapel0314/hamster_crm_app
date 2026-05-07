@@ -118,9 +118,10 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
         onSaved: _refresh,
       ),
       '고객DB' => CustomerDbPage(
+        repository: widget.repository,
         customers: data.customers,
         searchController: searchController,
-        onSearch: _refresh,
+        onChanged: _refresh,
       ),
       '가망고객' => ProspectsPage(
         repository: widget.repository,
@@ -588,24 +589,89 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
 class CustomerDbPage extends StatelessWidget {
   const CustomerDbPage({
     super.key,
+    required this.repository,
     required this.customers,
     required this.searchController,
-    required this.onSearch,
+    required this.onChanged,
   });
 
+  final CrmStore repository;
   final List<Customer> customers;
   final TextEditingController searchController;
-  final VoidCallback onSearch;
+  final VoidCallback onChanged;
+
+  Future<void> _showDetail(BuildContext context, Customer customer) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => _CustomerDetailDialog(customer: customer),
+    );
+  }
+
+  Future<void> _edit(BuildContext context, Customer customer) async {
+    final updated = await showDialog<Customer>(
+      context: context,
+      builder: (context) => _CustomerEditDialog(customer: customer),
+    );
+    if (updated == null) return;
+    await repository.updateCustomer(updated);
+    onChanged();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '\uACE0\uAC1D \uC815\uBCF4\uB97C \uC218\uC815\uD588\uC2B5\uB2C8\uB2E4.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _delete(BuildContext context, Customer customer) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('\uACE0\uAC1D \uC218\uC815'),
+        content: Text(
+          '${customer.customerName} \uACE0\uAC1D\uC744 \uC0AD\uC81C\uD560\uAE4C\uC694?\n\uC0AD\uC81C\uD55C \uB370\uC774\uD130\uB294 \uC77C\uBC18 \uBAA9\uB85D\uC5D0\uC11C \uC228\uACA8\uC9D1\uB2C8\uB2E4.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('\uCDE8\uC18C'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('\uCDE8\uC18C'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || customer.id == null) return;
+    await repository.softDeleteCustomer(customer.id!);
+    onChanged();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '\uACE0\uAC1D\uC744 \uC0AD\uC81C\uD588\uC2B5\uB2C8\uB2E4.',
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat('#,###원');
+    final money = NumberFormat('#,###?');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('고객DB', style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          '\uACE0\uAC1DDB',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         const SizedBox(height: 14),
-        _SearchBar(controller: searchController, onSearch: onSearch),
+        _SearchBar(controller: searchController, onSearch: onChanged),
         const SizedBox(height: 14),
         Expanded(
           child: Card(
@@ -618,8 +684,8 @@ class CustomerDbPage extends StatelessWidget {
                   child: SingleChildScrollView(
                     child: DataTable(
                       headingRowHeight: 38,
-                      dataRowMinHeight: 38,
-                      dataRowMaxHeight: 38,
+                      dataRowMinHeight: 42,
+                      dataRowMaxHeight: 42,
                       horizontalMargin: 8,
                       columnSpacing: 12,
                       headingTextStyle: const TextStyle(
@@ -632,6 +698,9 @@ class CustomerDbPage extends StatelessWidget {
                         color: HamsterColors.brown,
                       ),
                       columns: const [
+                        DataColumn(
+                          label: _TableHeader('\uAD00\uB9AC', width: 160),
+                        ),
                         DataColumn(
                           label: _TableHeader('\uB0A0\uC9DC', width: 86),
                         ),
@@ -667,6 +736,13 @@ class CustomerDbPage extends StatelessWidget {
                           .map(
                             (c) => DataRow(
                               cells: [
+                                DataCell(
+                                  _RowActions(
+                                    onDetail: () => _showDetail(context, c),
+                                    onEdit: () => _edit(context, c),
+                                    onDelete: () => _delete(context, c),
+                                  ),
+                                ),
                                 DataCell(_TableText(c.date, width: 86)),
                                 DataCell(_TableText(c.customerName, width: 76)),
                                 DataCell(_TableText(c.gender, width: 44)),
@@ -731,6 +807,379 @@ class _TableText extends StatelessWidget {
   }
 }
 
+class _RowActions extends StatelessWidget {
+  const _RowActions({
+    required this.onDetail,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final VoidCallback onDetail;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final compactStyle = TextButton.styleFrom(
+      minimumSize: const Size(44, 32),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+    return SizedBox(
+      width: 160,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: onDetail,
+            style: compactStyle,
+            child: const Text('\uC0C1\uC138'),
+          ),
+          TextButton(
+            onPressed: onEdit,
+            style: compactStyle,
+            child: const Text('\uC218\uC815'),
+          ),
+          TextButton(
+            onPressed: onDelete,
+            style: compactStyle,
+            child: const Text('\uC0AD\uC81C'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow(this.label, this.value);
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          Expanded(child: Text(value.isEmpty ? '-' : value)),
+        ],
+      ),
+    );
+  }
+}
+
+class _CustomerDetailDialog extends StatelessWidget {
+  const _CustomerDetailDialog({required this.customer});
+
+  final Customer customer;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = NumberFormat('#,###?');
+    return AlertDialog(
+      title: Text('${customer.customerName} \uC0C1\uC138\uBCF4\uAE30'),
+      content: SizedBox(
+        width: 520,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _InfoRow('\uB0A0\uC9DC', customer.date),
+            _InfoRow('\uC131\uBCC4', customer.gender),
+            _InfoRow('\uD734\uB300\uD3F0\uBC88\uD638', customer.phone),
+            _InfoRow('\uBD84\uC591', customer.adoption),
+            _InfoRow('\uAD6C\uB9E4', customer.purchase),
+            _InfoRow('\uB9E4\uCD9C', money.format(customer.revenue)),
+            _InfoRow('\uC6D0\uAC00', money.format(customer.cost)),
+            _InfoRow('\uC21C\uC775', money.format(customer.profit)),
+            _InfoRow('\uBA54\uBAA8', customer.memo),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('\uCDE8\uC18C'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProspectDetailDialog extends StatelessWidget {
+  const _ProspectDetailDialog({required this.prospect});
+
+  final Prospect prospect;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = NumberFormat('#,###?');
+    return AlertDialog(
+      title: Text('${prospect.customerName} \uC0C1\uC138\uBCF4\uAE30'),
+      content: SizedBox(
+        width: 520,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _InfoRow('\uC0C1\uB2F4\uB0A0\uC9DC', prospect.consultationDate),
+            _InfoRow('\uBC29\uBB38\uC608\uC815', prospect.visitDate),
+            _InfoRow('\uC131\uBCC4', prospect.gender),
+            _InfoRow('\uD734\uB300\uD3F0\uBC88\uD638', prospect.phone),
+            _InfoRow('\uBD84\uC591', prospect.adoption),
+            _InfoRow('\uAD6C\uB9E4', prospect.purchase),
+            _InfoRow('\uB9E4\uCD9C', money.format(prospect.revenue)),
+            _InfoRow('\uC6D0\uAC00', money.format(prospect.cost)),
+            _InfoRow('\uBA54\uBAA8', prospect.memo),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('\uCDE8\uC18C'),
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomerEditDialog extends StatefulWidget {
+  const _CustomerEditDialog({required this.customer});
+
+  final Customer customer;
+
+  @override
+  State<_CustomerEditDialog> createState() => _CustomerEditDialogState();
+}
+
+class _CustomerEditDialogState extends State<_CustomerEditDialog> {
+  late final name = TextEditingController(text: widget.customer.customerName);
+  late final phone = TextEditingController(text: widget.customer.phone);
+  late final adoption = TextEditingController(text: widget.customer.adoption);
+  late final purchase = TextEditingController(text: widget.customer.purchase);
+  late final revenue = TextEditingController(
+    text: widget.customer.revenue.toString(),
+  );
+  late final cost = TextEditingController(
+    text: widget.customer.cost.toString(),
+  );
+  late final memo = TextEditingController(text: widget.customer.memo);
+  late DateTime date =
+      DateTime.tryParse(widget.customer.date) ?? DateTime.now();
+  late String gender = widget.customer.gender.isEmpty
+      ? '\uBBF8\uC785\uB825'
+      : widget.customer.gender;
+
+  @override
+  void dispose() {
+    for (final c in [name, phone, adoption, purchase, revenue, cost, memo]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _save() {
+    if (name.text.trim().isEmpty) return;
+    Navigator.pop(
+      context,
+      widget.customer.copyWith(
+        date: DateFormat('yyyy-MM-dd').format(date),
+        customerName: name.text.trim(),
+        gender: gender,
+        phone: phone.text.trim(),
+        adoption: adoption.text.trim(),
+        purchase: purchase.text.trim(),
+        revenue: _toInt(revenue.text),
+        cost: _toInt(cost.text),
+        memo: memo.text.trim(),
+        updatedAt: DateTime.now().toIso8601String(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('\uACE0\uAC1D \uC0AD\uC81C'),
+      content: SizedBox(
+        width: 720,
+        child: SingleChildScrollView(
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _DateButton(
+                label: '\uB0A0\uC9DC',
+                date: date,
+                onChanged: (v) => setState(() => date = v),
+              ),
+              _Field(label: '\uACE0\uAC1D\uBA85', controller: name),
+              _Dropdown(
+                label: '\uB0A0\uC9DC',
+                value: gender,
+                values: const ['\uBBF8\uC785\uB825', '\uB0A8', '\uC5EC'],
+                onChanged: (v) => setState(() => gender = v),
+              ),
+              _Field(
+                label: '\uD734\uB300\uD3F0\uBC88\uD638',
+                controller: phone,
+              ),
+              _Field(label: '\uB0A0\uC9DC', controller: adoption),
+              _Field(label: '\uB0A0\uC9DC', controller: purchase),
+              _Field(label: '\uB0A0\uC9DC', controller: revenue, number: true),
+              _Field(label: '\uB0A0\uC9DC', controller: cost, number: true),
+              SizedBox(
+                width: 680,
+                child: TextField(
+                  controller: memo,
+                  minLines: 3,
+                  maxLines: 5,
+                  decoration: const InputDecoration(labelText: '\uBA54\uBAA8'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('\uCDE8\uC18C'),
+        ),
+        FilledButton(onPressed: _save, child: const Text('\uCDE8\uC18C')),
+      ],
+    );
+  }
+}
+
+class _ProspectEditDialog extends StatefulWidget {
+  const _ProspectEditDialog({required this.prospect});
+
+  final Prospect prospect;
+
+  @override
+  State<_ProspectEditDialog> createState() => _ProspectEditDialogState();
+}
+
+class _ProspectEditDialogState extends State<_ProspectEditDialog> {
+  late final name = TextEditingController(text: widget.prospect.customerName);
+  late final phone = TextEditingController(text: widget.prospect.phone);
+  late final adoption = TextEditingController(text: widget.prospect.adoption);
+  late final purchase = TextEditingController(text: widget.prospect.purchase);
+  late final revenue = TextEditingController(
+    text: widget.prospect.revenue.toString(),
+  );
+  late final cost = TextEditingController(
+    text: widget.prospect.cost.toString(),
+  );
+  late final memo = TextEditingController(text: widget.prospect.memo);
+  late DateTime consultationDate =
+      DateTime.tryParse(widget.prospect.consultationDate) ?? DateTime.now();
+  late DateTime visitDate =
+      DateTime.tryParse(widget.prospect.visitDate) ?? DateTime.now();
+  late String gender = widget.prospect.gender.isEmpty
+      ? '\uBBF8\uC785\uB825'
+      : widget.prospect.gender;
+
+  @override
+  void dispose() {
+    for (final c in [name, phone, adoption, purchase, revenue, cost, memo]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _save() {
+    if (name.text.trim().isEmpty) return;
+    Navigator.pop(
+      context,
+      widget.prospect.copyWith(
+        consultationDate: DateFormat('yyyy-MM-dd').format(consultationDate),
+        visitDate: DateFormat('yyyy-MM-dd').format(visitDate),
+        customerName: name.text.trim(),
+        gender: gender,
+        phone: phone.text.trim(),
+        adoption: adoption.text.trim(),
+        purchase: purchase.text.trim(),
+        revenue: _toInt(revenue.text),
+        cost: _toInt(cost.text),
+        memo: memo.text.trim(),
+        updatedAt: DateTime.now().toIso8601String(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('\uAC00\uB9DD\uACE0\uAC1D \uC218\uC815'),
+      content: SizedBox(
+        width: 720,
+        child: SingleChildScrollView(
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _DateButton(
+                label: '\uC0C1\uB2F4\uB0A0\uC9DC',
+                date: consultationDate,
+                onChanged: (v) => setState(() => consultationDate = v),
+              ),
+              _DateButton(
+                label: '\uC0C1\uB2F4\uB0A0\uC9DC',
+                date: visitDate,
+                onChanged: (v) => setState(() => visitDate = v),
+              ),
+              _Field(label: '\uACE0\uAC1D\uBA85', controller: name),
+              _Dropdown(
+                label: '\uB0A0\uC9DC',
+                value: gender,
+                values: const ['\uBBF8\uC785\uB825', '\uB0A8', '\uC5EC'],
+                onChanged: (v) => setState(() => gender = v),
+              ),
+              _Field(
+                label: '\uD734\uB300\uD3F0\uBC88\uD638',
+                controller: phone,
+              ),
+              _Field(label: '\uB0A0\uC9DC', controller: adoption),
+              _Field(label: '\uB0A0\uC9DC', controller: purchase),
+              _Field(label: '\uB0A0\uC9DC', controller: revenue, number: true),
+              _Field(label: '\uB0A0\uC9DC', controller: cost, number: true),
+              SizedBox(
+                width: 680,
+                child: TextField(
+                  controller: memo,
+                  minLines: 3,
+                  maxLines: 5,
+                  decoration: const InputDecoration(labelText: '\uBA54\uBAA8'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('\uCDE8\uC18C'),
+        ),
+        FilledButton(onPressed: _save, child: const Text('\uCDE8\uC18C')),
+      ],
+    );
+  }
+}
+
 class ProspectsPage extends StatefulWidget {
   const ProspectsPage({
     super.key,
@@ -773,11 +1222,82 @@ class _ProspectsPageState extends State<ProspectsPage> {
     widget.onChanged();
   }
 
+  Future<void> _showDetail(Prospect prospect) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => _ProspectDetailDialog(prospect: prospect),
+    );
+  }
+
+  Future<void> _edit(Prospect prospect) async {
+    final updated = await showDialog<Prospect>(
+      context: context,
+      builder: (context) => _ProspectEditDialog(prospect: prospect),
+    );
+    if (updated == null) return;
+    await widget.repository.updateProspect(updated);
+    widget.onChanged();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '\uAC00\uB9DD\uACE0\uAC1D \uC815\uBCF4\uB97C \uC218\uC815\uD588\uC2B5\uB2C8\uB2E4.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _delete(Prospect prospect) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('\uAC00\uB9DD\uACE0\uAC1D \uC0AD\uC81C'),
+        content: Text(
+          '${prospect.customerName} \uAC00\uB9DD\uACE0\uAC1D\uC744 \uC0AD\uC81C\uD560\uAE4C\uC694?\n\uC0AD\uC81C\uD55C \uB370\uC774\uD130\uB294 \uC77C\uBC18 \uBAA9\uB85D\uC5D0\uC11C \uC228\uACA8\uC9D1\uB2C8\uB2E4.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('\uCDE8\uC18C'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('\uCDE8\uC18C'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || prospect.id == null) return;
+    await widget.repository.softDeleteProspect(prospect.id!);
+    widget.onChanged();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '\uAC00\uB9DD\uACE0\uAC1D\uC744 \uC0AD\uC81C\uD588\uC2B5\uB2C8\uB2E4.',
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    phone.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final money = NumberFormat('#,###?');
     return ListView(
       children: [
-        Text('가망고객', style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          '\uAC00\uB9DD\uACE0\uAC1D',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         const SizedBox(height: 14),
         _SearchBar(
           controller: widget.searchController,
@@ -793,45 +1313,104 @@ class _ProspectsPageState extends State<ProspectsPage> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 _DateButton(
-                  label: '상담날짜',
+                  label: '\uC0C1\uB2F4\uB0A0\uC9DC',
                   date: consultationDate,
                   onChanged: (v) => setState(() => consultationDate = v),
                 ),
                 _DateButton(
-                  label: '방문예정',
+                  label: '\uC0C1\uB2F4\uB0A0\uC9DC',
                   date: visitDate,
                   onChanged: (v) => setState(() => visitDate = v),
                 ),
-                _Field(label: '고객명', controller: name),
-                _Field(label: '휴대폰번호', controller: phone),
-                FilledButton(onPressed: _add, child: const Text('가망고객 추가')),
+                _Field(label: '\uACE0\uAC1D\uBA85', controller: name),
+                _Field(
+                  label: '\uD734\uB300\uD3F0\uBC88\uD638',
+                  controller: phone,
+                ),
+                FilledButton(
+                  onPressed: _add,
+                  child: const Text('\uAC00\uB9DD\uACE0\uAC1D \uCD94\uAC00'),
+                ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 14),
         Card(
-          child: DataTable(
-            columns: const [
-              DataColumn(label: Text('상담날짜')),
-              DataColumn(label: Text('방문예정')),
-              DataColumn(label: Text('고객명')),
-              DataColumn(label: Text('휴대폰번호')),
-              DataColumn(label: Text('메모')),
-            ],
-            rows: widget.prospects
-                .map(
-                  (p) => DataRow(
-                    cells: [
-                      DataCell(Text(p.consultationDate)),
-                      DataCell(Text(p.visitDate)),
-                      DataCell(Text(p.customerName)),
-                      DataCell(Text(p.phone)),
-                      DataCell(Text(p.memo)),
-                    ],
-                  ),
-                )
-                .toList(),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowHeight: 38,
+                  dataRowMinHeight: 42,
+                  dataRowMaxHeight: 42,
+                  horizontalMargin: 8,
+                  columnSpacing: 12,
+                  columns: const [
+                    DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 160)),
+                    DataColumn(
+                      label: _TableHeader(
+                        '\uC0C1\uB2F4\uB0A0\uC9DC',
+                        width: 92,
+                      ),
+                    ),
+                    DataColumn(
+                      label: _TableHeader(
+                        '\uC0C1\uB2F4\uB0A0\uC9DC',
+                        width: 92,
+                      ),
+                    ),
+                    DataColumn(
+                      label: _TableHeader('\uACE0\uAC1D\uBA85', width: 76),
+                    ),
+                    DataColumn(label: _TableHeader('\uC131\uBCC4', width: 44)),
+                    DataColumn(
+                      label: _TableHeader(
+                        '\uD734\uB300\uD3F0\uBC88\uD638',
+                        width: 116,
+                      ),
+                    ),
+                    DataColumn(label: _TableHeader('\uBD84\uC591', width: 120)),
+                    DataColumn(label: _TableHeader('\uAD6C\uB9E4', width: 130)),
+                    DataColumn(label: _TableHeader('\uB9E4\uCD9C', width: 86)),
+                    DataColumn(label: _TableHeader('\uC6D0\uAC00', width: 86)),
+                    DataColumn(label: _TableHeader('\uBA54\uBAA8', width: 420)),
+                  ],
+                  rows: widget.prospects
+                      .map(
+                        (p) => DataRow(
+                          cells: [
+                            DataCell(
+                              _RowActions(
+                                onDetail: () => _showDetail(p),
+                                onEdit: () => _edit(p),
+                                onDelete: () => _delete(p),
+                              ),
+                            ),
+                            DataCell(_TableText(p.consultationDate, width: 92)),
+                            DataCell(_TableText(p.visitDate, width: 92)),
+                            DataCell(_TableText(p.customerName, width: 76)),
+                            DataCell(_TableText(p.gender, width: 44)),
+                            DataCell(_TableText(p.phone, width: 116)),
+                            DataCell(_TableText(p.adoption, width: 120)),
+                            DataCell(_TableText(p.purchase, width: 130)),
+                            DataCell(
+                              _TableText(money.format(p.revenue), width: 86),
+                            ),
+                            DataCell(
+                              _TableText(money.format(p.cost), width: 86),
+                            ),
+                            DataCell(_TableText(p.memo, width: 420)),
+                          ],
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
           ),
         ),
       ],

@@ -59,4 +59,53 @@ void main() {
     expect(await repository.prospects(query: '예비'), hasLength(1));
     expect((await repository.dashboardSummary()).totalProspects, 1);
   });
+
+  test('updates and soft deletes customer and prospect records', () async {
+    const now = '2026-05-07T00:00:00';
+    final customerId = await repository.addCustomer(
+      const Customer(
+        date: '2026-05-07',
+        customerName: '수정전',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    final prospectId = await repository.addProspect(
+      const Prospect(
+        consultationDate: '2026-05-07',
+        customerName: '가망수정전',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await repository.updateCustomer(
+      Customer(
+        id: customerId,
+        date: '2026-05-08',
+        customerName: '수정후',
+        revenue: 30000,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    await repository.updateProspect(
+      Prospect(
+        id: prospectId,
+        consultationDate: '2026-05-09',
+        customerName: '가망수정후',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    expect((await repository.customers(query: '수정후')).single.revenue, 30000);
+    expect(await repository.prospects(query: '가망수정후'), hasLength(1));
+
+    await repository.softDeleteCustomer(customerId);
+    await repository.softDeleteProspect(prospectId);
+
+    expect(await repository.customers(), isEmpty);
+    expect(await repository.prospects(), isEmpty);
+  });
 }
