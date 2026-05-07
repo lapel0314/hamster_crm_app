@@ -744,92 +744,113 @@ class _CustomerEntryCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _SectionTitle(
-              icon: Icons.badge_rounded,
-              title: '\uAE30\uBCF8 \uC815\uBCF4',
-              subtitle:
-                  '\uACE0\uAC1D \uC2DD\uBCC4\uC5D0 \uD544\uC694\uD55C \uB0B4\uC6A9\uC744 \uBA3C\uC800 \uCC44\uC6CC \uC8FC\uC138\uC694.',
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            const gap = 16.0;
+            final columns = constraints.maxWidth >= 760
+                ? 4
+                : constraints.maxWidth >= 520
+                ? 2
+                : 1;
+            final fieldWidth =
+                (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _DateButton(
-                  label: '\uB0A0\uC9DC',
-                  date: date,
-                  width: 260,
-                  onChanged: onDateChanged,
+                const _SectionTitle(
+                  icon: Icons.badge_rounded,
+                  title: '\uAE30\uBCF8 \uC815\uBCF4',
+                  subtitle:
+                      '\uACE0\uAC1D \uC2DD\uBCC4\uC5D0 \uD544\uC694\uD55C \uB0B4\uC6A9\uC744 \uBA3C\uC800 \uCC44\uC6CC \uC8FC\uC138\uC694.',
                 ),
-                _Field(
-                  label: '\uACE0\uAC1D\uBA85',
-                  controller: name,
-                  width: 260,
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    _DateButton(
+                      label: '\uB0A0\uC9DC',
+                      date: date,
+                      width: fieldWidth,
+                      onChanged: onDateChanged,
+                    ),
+                    _Field(
+                      label: '\uACE0\uAC1D\uBA85',
+                      controller: name,
+                      width: fieldWidth,
+                    ),
+                    _Dropdown(
+                      label: '\uC131\uBCC4',
+                      value: gender,
+                      width: fieldWidth,
+                      values: const ['\uBBF8\uC785\uB825', '\uB0A8', '\uC5EC'],
+                      onChanged: onGenderChanged,
+                    ),
+                    _Field(
+                      label: '\uD734\uB300\uD3F0\uBC88\uD638',
+                      controller: phone,
+                      width: fieldWidth,
+                    ),
+                  ],
                 ),
-                _Dropdown(
-                  label: '\uC131\uBCC4',
-                  value: gender,
-                  width: 180,
-                  values: const ['\uBBF8\uC785\uB825', '\uB0A8', '\uC5EC'],
-                  onChanged: onGenderChanged,
+                const SizedBox(height: 28),
+                const _SectionTitle(
+                  icon: Icons.shopping_bag_rounded,
+                  title: '\uBD84\uC591 \u00B7 \uAD6C\uB9E4 \u00B7 \uC815\uC0B0',
+                  subtitle:
+                      '\uB300\uC2DC\uBCF4\uB4DC \uC9D1\uACC4\uC5D0 \uBC14\uB85C \uBC18\uC601\uB418\uB294 \uAE08\uC561 \uC815\uBCF4\uC785\uB2C8\uB2E4.',
                 ),
-                _Field(
-                  label: '\uD734\uB300\uD3F0\uBC88\uD638',
-                  controller: phone,
-                  width: 260,
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    _Field(
+                      label: '\uBD84\uC591',
+                      controller: adoption,
+                      width: fieldWidth,
+                    ),
+                    _Field(
+                      label: '\uAD6C\uB9E4',
+                      controller: purchase,
+                      width: fieldWidth,
+                    ),
+                    _Field(
+                      label: '\uB9E4\uCD9C',
+                      controller: revenue,
+                      number: true,
+                      width: fieldWidth,
+                    ),
+                    _Field(
+                      label: '\uC6D0\uAC00',
+                      controller: cost,
+                      number: true,
+                      width: fieldWidth,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                const _SectionTitle(
+                  icon: Icons.edit_note_rounded,
+                  title: '\uC0C1\uB2F4 \uBA54\uBAA8',
+                  subtitle:
+                      '\uC0AC\uC721 \uC548\uB0B4, \uC7AC\uBC29\uBB38 \uC608\uC815, \uD2B9\uC774\uC0AC\uD56D\uC744 \uB113\uAC8C \uB0A8\uACA8 \uC8FC\uC138\uC694.',
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: memo,
+                  minLines: 7,
+                  maxLines: 9,
+                  decoration: const InputDecoration(
+                    labelText: '\uBA54\uBAA8',
+                    hintText:
+                        '\uC608: \uCC98\uC74C \uD0A4\uC6B0\uB294 \uACE0\uAC1D / \uD1A0\uC694\uC77C \uC7AC\uBC29\uBB38 \uC608\uC815 / \uCF00\uC774\uC9C0 \uC138\uD2B8 \uAD00\uC2EC',
+                  ),
                 ),
               ],
-            ),
-            const SizedBox(height: 28),
-            const _SectionTitle(
-              icon: Icons.shopping_bag_rounded,
-              title: '\uBD84\uC591 \u00B7 \uAD6C\uB9E4 \u00B7 \uC815\uC0B0',
-              subtitle:
-                  '\uB300\uC2DC\uBCF4\uB4DC \uC9D1\uACC4\uC5D0 \uBC14\uB85C \uBC18\uC601\uB418\uB294 \uAE08\uC561 \uC815\uBCF4\uC785\uB2C8\uB2E4.',
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                _Field(label: '\uBD84\uC591', controller: adoption, width: 280),
-                _Field(label: '\uAD6C\uB9E4', controller: purchase, width: 280),
-                _Field(
-                  label: '\uB9E4\uCD9C',
-                  controller: revenue,
-                  number: true,
-                  width: 220,
-                ),
-                _Field(
-                  label: '\uC6D0\uAC00',
-                  controller: cost,
-                  number: true,
-                  width: 220,
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            const _SectionTitle(
-              icon: Icons.edit_note_rounded,
-              title: '\uC0C1\uB2F4 \uBA54\uBAA8',
-              subtitle:
-                  '\uC0AC\uC721 \uC548\uB0B4, \uC7AC\uBC29\uBB38 \uC608\uC815, \uD2B9\uC774\uC0AC\uD56D\uC744 \uB113\uAC8C \uB0A8\uACA8 \uC8FC\uC138\uC694.',
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: memo,
-              minLines: 7,
-              maxLines: 9,
-              decoration: const InputDecoration(
-                labelText: '\uBA54\uBAA8',
-                hintText:
-                    '\uC608: \uCC98\uC74C \uD0A4\uC6B0\uB294 \uACE0\uAC1D / \uD1A0\uC694\uC77C \uC7AC\uBC29\uBB38 \uC608\uC815 / \uCF00\uC774\uC9C0 \uC138\uD2B8 \uAD00\uC2EC',
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -2303,6 +2324,12 @@ class _DateButton extends StatelessWidget {
     return SizedBox(
       width: width,
       child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 56),
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         onPressed: () async {
           final picked = await showDatePicker(
             context: context,
