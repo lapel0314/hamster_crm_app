@@ -794,8 +794,6 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
               cost: cost,
               memo: memo,
             ),
-            const SizedBox(height: 16),
-            _CustomerEntryActions(onSave: _save, onClear: _clear),
           ],
         );
       },
@@ -944,81 +942,6 @@ class _CustomerEntryCard extends StatelessWidget {
   }
 }
 
-class _CustomerEntryActions extends StatelessWidget {
-  const _CustomerEntryActions({required this.onSave, required this.onClear});
-
-  final VoidCallback onSave;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: Image.asset(
-                  'assets/byopet_icon.png',
-                  width: 150,
-                  height: 150,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              '\uB4F1\uB85D \uC804 \uCCB4\uD06C',
-              style: TextStyle(
-                color: HamsterColors.brown,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            const _CheckLine(
-              '\uACE0\uAC1D\uBA85\uC740 \uD544\uC218 \uC785\uB825',
-            ),
-            const _CheckLine(
-              '\uB9E4\uCD9C/\uC6D0\uAC00\uB294 \uC22B\uC790\uB85C \uC785\uB825',
-            ),
-            const _CheckLine(
-              '\uBA54\uBAA8\uB294 \uACE0\uAC1DDB \uC0C1\uC138\uBCF4\uAE30\uC5D0\uC11C \uD655\uC778',
-            ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: onSave,
-              icon: const Icon(Icons.save_rounded),
-              label: const Text('\uACE0\uAC1D \uC800\uC7A5'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(double.infinity, 64),
-                textStyle: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: onClear,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('\uC785\uB825 \uCD08\uAE30\uD654'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 54),
-                textStyle: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({
     required this.icon,
@@ -1068,36 +991,6 @@ class _SectionTitle extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _CheckLine extends StatelessWidget {
-  const _CheckLine(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.check_circle_rounded, color: HamsterColors.mint),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: HamsterColors.brown,
-                fontWeight: FontWeight.w700,
-                height: 1.35,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -1306,9 +1199,6 @@ class _CustomerDbPageState extends State<CustomerDbPage> {
                       ),
                       columns: const [
                         DataColumn(
-                          label: _TableHeader('\uAD00\uB9AC', width: 106),
-                        ),
-                        DataColumn(
                           label: _TableHeader('\uB0A0\uC9DC', width: 86),
                         ),
                         DataColumn(
@@ -1336,20 +1226,16 @@ class _CustomerDbPageState extends State<CustomerDbPage> {
                           label: _TableHeader('\uC6D0\uAC00', width: 86),
                         ),
                         DataColumn(
-                          label: _TableHeader('\uBA54\uBAA8', width: 420),
+                          label: _TableHeader('\uBA54\uBAA8', width: 260),
+                        ),
+                        DataColumn(
+                          label: _TableHeader('\uAD00\uB9AC', width: 106),
                         ),
                       ],
                       rows: visibleCustomers
                           .map(
                             (c) => DataRow(
                               cells: [
-                                DataCell(
-                                  _RowActions(
-                                    onDetail: () => _showDetail(context, c),
-                                    onEdit: () => _edit(context, c),
-                                    onDelete: () => _delete(context, c),
-                                  ),
-                                ),
                                 DataCell(_TableText(c.date, width: 86)),
                                 DataCell(_TableText(c.customerName, width: 76)),
                                 DataCell(_TableText(c.gender, width: 44)),
@@ -1365,7 +1251,14 @@ class _CustomerDbPageState extends State<CustomerDbPage> {
                                 DataCell(
                                   _TableText(money.format(c.cost), width: 86),
                                 ),
-                                DataCell(_TableText(c.memo, width: 420)),
+                                DataCell(_TableText(c.memo, width: 260)),
+                                DataCell(
+                                  _RowActions(
+                                    onDetail: () => _showDetail(context, c),
+                                    onEdit: () => _edit(context, c),
+                                    onDelete: () => _delete(context, c),
+                                  ),
+                                ),
                               ],
                             ),
                           )
@@ -1822,8 +1715,12 @@ class ProspectsPage extends StatefulWidget {
 class _ProspectsPageState extends State<ProspectsPage> {
   final name = TextEditingController();
   final phone = TextEditingController();
+  final adoption = TextEditingController();
+  final purchase = TextEditingController();
+  final memo = TextEditingController();
   DateTime consultationDate = DateTime.now();
   DateTime visitDate = DateTime.now();
+  String gender = '\uBBF8\uC785\uB825';
 
   Future<void> _add() async {
     if (name.text.trim().isEmpty) return;
@@ -1833,13 +1730,25 @@ class _ProspectsPageState extends State<ProspectsPage> {
         consultationDate: DateFormat('yyyy-MM-dd').format(consultationDate),
         visitDate: DateFormat('yyyy-MM-dd').format(visitDate),
         customerName: name.text.trim(),
+        gender: gender,
         phone: phone.text.trim(),
+        adoption: adoption.text.trim(),
+        purchase: purchase.text.trim(),
+        memo: memo.text.trim(),
         createdAt: now,
         updatedAt: now,
       ),
     );
     name.clear();
     phone.clear();
+    adoption.clear();
+    purchase.clear();
+    memo.clear();
+    setState(() {
+      consultationDate = DateTime.now();
+      visitDate = DateTime.now();
+      gender = '\uBBF8\uC785\uB825';
+    });
     widget.onChanged();
   }
 
@@ -1905,8 +1814,9 @@ class _ProspectsPageState extends State<ProspectsPage> {
 
   @override
   void dispose() {
-    name.dispose();
-    phone.dispose();
+    for (final controller in [name, phone, adoption, purchase, memo]) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -1944,13 +1854,37 @@ class _ProspectsPageState extends State<ProspectsPage> {
                   onChanged: (v) => setState(() => visitDate = v),
                 ),
                 _Field(label: '\uACE0\uAC1D\uBA85', controller: name),
+                _Dropdown(
+                  label: '\uC131\uBCC4',
+                  value: gender,
+                  values: const ['\uBBF8\uC785\uB825', '\uB0A8', '\uC5EC'],
+                  onChanged: (v) => setState(() => gender = v),
+                ),
                 _Field(
                   label: '\uD734\uB300\uD3F0\uBC88\uD638',
                   controller: phone,
                 ),
-                FilledButton(
+                _Field(label: '\uBD84\uC591', controller: adoption),
+                _Field(label: '\uAD6C\uB9E4', controller: purchase),
+                SizedBox(
+                  width: 452,
+                  child: TextField(
+                    controller: memo,
+                    minLines: 2,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: '\uBA54\uBAA8',
+                    ),
+                  ),
+                ),
+                FilledButton.icon(
                   onPressed: _add,
-                  child: const Text('\uAC00\uB9DD\uACE0\uAC1D \uCD94\uAC00'),
+                  icon: const Icon(Icons.person_add_alt_1_rounded),
+                  label: const Text('\uAC00\uB9DD\uACE0\uAC1D \uCD94\uAC00'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(180, 54),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
                 ),
               ],
             ),
@@ -1971,7 +1905,6 @@ class _ProspectsPageState extends State<ProspectsPage> {
                   horizontalMargin: 8,
                   columnSpacing: 12,
                   columns: const [
-                    DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 106)),
                     DataColumn(
                       label: _TableHeader(
                         '\uC0C1\uB2F4\uB0A0\uC9DC',
@@ -1998,19 +1931,13 @@ class _ProspectsPageState extends State<ProspectsPage> {
                     DataColumn(label: _TableHeader('\uAD6C\uB9E4', width: 130)),
                     DataColumn(label: _TableHeader('\uB9E4\uCD9C', width: 86)),
                     DataColumn(label: _TableHeader('\uC6D0\uAC00', width: 86)),
-                    DataColumn(label: _TableHeader('\uBA54\uBAA8', width: 420)),
+                    DataColumn(label: _TableHeader('\uBA54\uBAA8', width: 260)),
+                    DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 106)),
                   ],
                   rows: widget.prospects
                       .map(
                         (p) => DataRow(
                           cells: [
-                            DataCell(
-                              _RowActions(
-                                onDetail: () => _showDetail(p),
-                                onEdit: () => _edit(p),
-                                onDelete: () => _delete(p),
-                              ),
-                            ),
                             DataCell(_TableText(p.consultationDate, width: 92)),
                             DataCell(_TableText(p.visitDate, width: 92)),
                             DataCell(_TableText(p.customerName, width: 76)),
@@ -2024,7 +1951,14 @@ class _ProspectsPageState extends State<ProspectsPage> {
                             DataCell(
                               _TableText(money.format(p.cost), width: 86),
                             ),
-                            DataCell(_TableText(p.memo, width: 420)),
+                            DataCell(_TableText(p.memo, width: 260)),
+                            DataCell(
+                              _RowActions(
+                                onDetail: () => _showDetail(p),
+                                onEdit: () => _edit(p),
+                                onDelete: () => _delete(p),
+                              ),
+                            ),
                           ],
                         ),
                       )
