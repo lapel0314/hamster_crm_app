@@ -16,7 +16,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump();
 
-    expect(find.text('🐹 Golden Hamster'), findsOneWidget);
+    expect(find.text('뵤펫'), findsOneWidget);
     expect(find.text('대시보드'), findsWidgets);
     expect(find.text('고객등록'), findsOneWidget);
     expect(find.text('고객DB'), findsWidgets);

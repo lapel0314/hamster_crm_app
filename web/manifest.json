@@ -1,11 +1,11 @@
 {
-    "name": "hamster_crm_app",
-    "short_name": "hamster_crm_app",
+    "name": "뵤펫 CRM",
+    "short_name": "뵤펫",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFF7E8",
+    "theme_color": "#8B5E34",
+    "description": "뵤펫 로컬 오프라인 CRM",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

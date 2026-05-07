@@ -1,4 +1,4 @@
-# Golden Hamster CRM
+# 뵤펫 CRM
 
 로컬 오프라인 전용 Flutter Windows CRM입니다. 기존 `crm_app`과 분리된 신규 프로젝트입니다.
 

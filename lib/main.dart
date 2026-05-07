@@ -23,7 +23,7 @@ class HamsterCrmApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Golden Hamster CRM',
+      title: '뵤펫 CRM',
       debugShowCheckedModeBanner: false,
       theme: buildHamsterTheme(),
       home: HamsterHomePage(repository: repository),
@@ -162,13 +162,27 @@ class _Sidebar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '🐹 Golden Hamster',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-            ),
+          Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  'assets/golden_hamster_mascot.png',
+                  width: 38,
+                  height: 38,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                '뵤펫',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 6),
           const Text(
