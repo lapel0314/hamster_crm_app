@@ -51,6 +51,7 @@ const pages = [
   { name: '02-customer-register.png', url: 'http://127.0.0.1:5617/?page=customer-registration' },
   { name: '03-customer-db.png', url: 'http://127.0.0.1:5617/?page=customers' },
   { name: '04-prospects.png', url: 'http://127.0.0.1:5617/?page=prospects' },
+  { name: '05-trash.png', url: 'http://127.0.0.1:5617/?page=trash' },
 ];
 
 const client = new CdpClient(await getWebSocketUrl());
