@@ -44,6 +44,14 @@ void main() {
     expect(summary.totalCustomers, 1);
   });
 
+  test('ranking ignores spacing differences', () {
+    final ranking = buildRanking(['골든햄스터', '골든 햄스터', ' 골든   햄스터 ']);
+
+    expect(ranking, hasLength(1));
+    expect(ranking.single.label, '골든햄스터');
+    expect(ranking.single.count, 3);
+  });
+
   test('stores prospects separately from customers', () async {
     const now = '2026-05-07T00:00:00';
     await repository.addProspect(

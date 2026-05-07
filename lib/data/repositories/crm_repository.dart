@@ -570,13 +570,16 @@ class RankItem {
 
 List<RankItem> buildRanking(Iterable<String> values) {
   final counts = <String, int>{};
+  final labels = <String, String>{};
   for (final value in values) {
-    final key = value.trim();
+    final label = value.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final key = label.replaceAll(RegExp(r'\s+'), '').toLowerCase();
     if (key.isEmpty) continue;
     counts[key] = (counts[key] ?? 0) + 1;
+    labels.putIfAbsent(key, () => label);
   }
   final items = counts.entries
-      .map((e) => RankItem(label: e.key, count: e.value))
+      .map((e) => RankItem(label: labels[e.key] ?? e.key, count: e.value))
       .toList();
   items.sort((a, b) => b.count.compareTo(a.count));
   return items.take(5).toList();
