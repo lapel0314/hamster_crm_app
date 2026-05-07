@@ -167,7 +167,7 @@ class _Sidebar extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.asset(
-                  'assets/golden_hamster_mascot.png',
+                  'assets/byopet_icon.png',
                   width: 38,
                   height: 38,
                   fit: BoxFit.cover,
