@@ -40,7 +40,7 @@ class HamsterHomePage extends StatefulWidget {
 }
 
 class _HamsterHomePageState extends State<HamsterHomePage> {
-  String selectedPage = '대시보드';
+  late String selectedPage = _initialPage();
   late Future<_HomeData> _dataFuture = _load();
   final searchController = TextEditingController();
 
@@ -54,6 +54,16 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
         query: searchController.text,
       ),
     );
+  }
+
+  String _initialPage() {
+    if (!kIsWeb) return '대시보드';
+    return switch (Uri.base.queryParameters['page']) {
+      'customer-registration' => '고객등록',
+      'customers' => '고객DB',
+      'prospects' => '가망고객',
+      _ => '대시보드',
+    };
   }
 
   void _refresh() {
