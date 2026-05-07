@@ -2420,26 +2420,56 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 420,
-          child: TextField(
-            controller: controller,
-            decoration: const InputDecoration(labelText: '검색'),
-          ),
-        ),
-        const SizedBox(width: 10),
-        FilledButton(onPressed: onSearch, child: const Text('검색')),
-        const SizedBox(width: 8),
-        OutlinedButton(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 430;
+        final searchButton = FilledButton(
+          onPressed: onSearch,
+          child: const Text('검색'),
+        );
+        final clearButton = OutlinedButton(
           onPressed: () {
             controller.clear();
             onSearch();
           },
           child: const Text('초기화'),
-        ),
-      ],
+        );
+
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(labelText: '검색'),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: searchButton),
+                  const SizedBox(width: 8),
+                  Expanded(child: clearButton),
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                decoration: const InputDecoration(labelText: '검색'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            searchButton,
+            const SizedBox(width: 8),
+            clearButton,
+          ],
+        );
+      },
     );
   }
 }
