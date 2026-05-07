@@ -1199,10 +1199,10 @@ class _CustomerDbPageState extends State<CustomerDbPage> {
                       ),
                       columns: const [
                         DataColumn(
-                          label: _TableHeader('\uB0A0\uC9DC', width: 86),
+                          label: _TableHeader('\uB0A0\uC9DC', width: 80),
                         ),
                         DataColumn(
-                          label: _TableHeader('\uACE0\uAC1D\uBA85', width: 76),
+                          label: _TableHeader('\uACE0\uAC1D\uBA85', width: 70),
                         ),
                         DataColumn(
                           label: _TableHeader('\uC131\uBCC4', width: 44),
@@ -1214,44 +1214,44 @@ class _CustomerDbPageState extends State<CustomerDbPage> {
                           ),
                         ),
                         DataColumn(
-                          label: _TableHeader('\uBD84\uC591', width: 120),
+                          label: _TableHeader('\uBD84\uC591', width: 100),
                         ),
                         DataColumn(
-                          label: _TableHeader('\uAD6C\uB9E4', width: 130),
+                          label: _TableHeader('\uAD6C\uB9E4', width: 100),
                         ),
                         DataColumn(
-                          label: _TableHeader('\uB9E4\uCD9C', width: 86),
+                          label: _TableHeader('\uB9E4\uCD9C', width: 80),
                         ),
                         DataColumn(
-                          label: _TableHeader('\uC6D0\uAC00', width: 86),
+                          label: _TableHeader('\uC6D0\uAC00', width: 80),
                         ),
                         DataColumn(
-                          label: _TableHeader('\uBA54\uBAA8', width: 260),
+                          label: _TableHeader('\uBA54\uBAA8', width: 140),
                         ),
                         DataColumn(
-                          label: _TableHeader('\uAD00\uB9AC', width: 106),
+                          label: _TableHeader('\uAD00\uB9AC', width: 96),
                         ),
                       ],
                       rows: visibleCustomers
                           .map(
                             (c) => DataRow(
                               cells: [
-                                DataCell(_TableText(c.date, width: 86)),
-                                DataCell(_TableText(c.customerName, width: 76)),
+                                DataCell(_TableText(c.date, width: 80)),
+                                DataCell(_TableText(c.customerName, width: 70)),
                                 DataCell(_TableText(c.gender, width: 44)),
-                                DataCell(_TableText(c.phone, width: 116)),
-                                DataCell(_TableText(c.adoption, width: 120)),
-                                DataCell(_TableText(c.purchase, width: 130)),
+                                DataCell(_TableText(c.phone, width: 100)),
+                                DataCell(_TableText(c.adoption, width: 100)),
+                                DataCell(_TableText(c.purchase, width: 100)),
                                 DataCell(
                                   _TableText(
                                     money.format(c.revenue),
-                                    width: 86,
+                                    width: 80,
                                   ),
                                 ),
                                 DataCell(
-                                  _TableText(money.format(c.cost), width: 86),
+                                  _TableText(money.format(c.cost), width: 80),
                                 ),
-                                DataCell(_TableText(c.memo, width: 260)),
+                                DataCell(_TableText(c.memo, width: 140)),
                                 DataCell(
                                   _RowActions(
                                     onDetail: () => _showDetail(context, c),
@@ -1321,14 +1321,14 @@ class _RowActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compactStyle = IconButton.styleFrom(
-      minimumSize: const Size(30, 30),
-      fixedSize: const Size(30, 30),
+      minimumSize: const Size(24, 30),
+      fixedSize: const Size(24, 30),
       padding: EdgeInsets.zero,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      iconSize: 17,
+      iconSize: 16,
     );
     return SizedBox(
-      width: 106,
+      width: 78,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1340,7 +1340,7 @@ class _RowActions extends StatelessWidget {
               icon: const Icon(Icons.visibility_rounded),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 2),
           Tooltip(
             message: '\uC218\uC815',
             child: IconButton(
@@ -1349,7 +1349,7 @@ class _RowActions extends StatelessWidget {
               icon: const Icon(Icons.edit_rounded),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 2),
           Tooltip(
             message: '\uC0AD\uC81C',
             child: IconButton(
@@ -1902,56 +1902,56 @@ class _ProspectsPageState extends State<ProspectsPage> {
                   headingRowHeight: 38,
                   dataRowMinHeight: 42,
                   dataRowMaxHeight: 42,
-                  horizontalMargin: 8,
-                  columnSpacing: 12,
+                  horizontalMargin: 4,
+                  columnSpacing: 8,
                   columns: const [
                     DataColumn(
                       label: _TableHeader(
                         '\uC0C1\uB2F4\uB0A0\uC9DC',
-                        width: 92,
+                        width: 78,
                       ),
                     ),
                     DataColumn(
                       label: _TableHeader(
                         '\uBC29\uBB38\uC608\uC815',
-                        width: 92,
+                        width: 78,
                       ),
                     ),
                     DataColumn(
-                      label: _TableHeader('\uACE0\uAC1D\uBA85', width: 76),
+                      label: _TableHeader('\uACE0\uAC1D\uBA85', width: 64),
                     ),
-                    DataColumn(label: _TableHeader('\uC131\uBCC4', width: 44)),
+                    DataColumn(label: _TableHeader('\uC131\uBCC4', width: 38)),
                     DataColumn(
                       label: _TableHeader(
                         '\uD734\uB300\uD3F0\uBC88\uD638',
-                        width: 116,
+                        width: 96,
                       ),
                     ),
-                    DataColumn(label: _TableHeader('\uBD84\uC591', width: 120)),
-                    DataColumn(label: _TableHeader('\uAD6C\uB9E4', width: 130)),
-                    DataColumn(label: _TableHeader('\uB9E4\uCD9C', width: 86)),
-                    DataColumn(label: _TableHeader('\uC6D0\uAC00', width: 86)),
-                    DataColumn(label: _TableHeader('\uBA54\uBAA8', width: 260)),
-                    DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 106)),
+                    DataColumn(label: _TableHeader('\uBD84\uC591', width: 84)),
+                    DataColumn(label: _TableHeader('\uAD6C\uB9E4', width: 84)),
+                    DataColumn(label: _TableHeader('\uB9E4\uCD9C', width: 72)),
+                    DataColumn(label: _TableHeader('\uC6D0\uAC00', width: 72)),
+                    DataColumn(label: _TableHeader('\uBA54\uBAA8', width: 96)),
+                    DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 82)),
                   ],
                   rows: widget.prospects
                       .map(
                         (p) => DataRow(
                           cells: [
-                            DataCell(_TableText(p.consultationDate, width: 92)),
-                            DataCell(_TableText(p.visitDate, width: 92)),
-                            DataCell(_TableText(p.customerName, width: 76)),
-                            DataCell(_TableText(p.gender, width: 44)),
-                            DataCell(_TableText(p.phone, width: 116)),
-                            DataCell(_TableText(p.adoption, width: 120)),
-                            DataCell(_TableText(p.purchase, width: 130)),
+                            DataCell(_TableText(p.consultationDate, width: 78)),
+                            DataCell(_TableText(p.visitDate, width: 78)),
+                            DataCell(_TableText(p.customerName, width: 64)),
+                            DataCell(_TableText(p.gender, width: 38)),
+                            DataCell(_TableText(p.phone, width: 96)),
+                            DataCell(_TableText(p.adoption, width: 84)),
+                            DataCell(_TableText(p.purchase, width: 84)),
                             DataCell(
-                              _TableText(money.format(p.revenue), width: 86),
+                              _TableText(money.format(p.revenue), width: 72),
                             ),
                             DataCell(
-                              _TableText(money.format(p.cost), width: 86),
+                              _TableText(money.format(p.cost), width: 72),
                             ),
-                            DataCell(_TableText(p.memo, width: 260)),
+                            DataCell(_TableText(p.memo, width: 96)),
                             DataCell(
                               _RowActions(
                                 onDetail: () => _showDetail(p),
