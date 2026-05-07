@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:hamster_crm_app/core/database/app_database.dart';
 import 'package:hamster_crm_app/core/theme/app_theme.dart';
@@ -213,81 +214,252 @@ class _DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat('#,###원');
+    final money = NumberFormat('#,###\uC6D0');
     return ListView(
       children: [
-        Text('대시보드', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 18),
+        Text(
+          '\uB300\uC2DC\uBCF4\uB4DC',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 14),
         Wrap(
-          spacing: 14,
-          runSpacing: 14,
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            _MetricCard('고객DB', '${data.summary.totalCustomers}명'),
-            _MetricCard('가망고객', '${data.summary.totalProspects}명'),
-            _MetricCard('이번달 매출', money.format(data.summary.monthRevenue)),
-            _MetricCard('이번달 순이익', money.format(data.summary.monthProfit)),
+            _MetricCard(
+              '\uACE0\uAC1DDB',
+              '${data.summary.totalCustomers}\uBA85',
+            ),
+            _MetricCard(
+              '\uAC00\uB9DD\uACE0\uAC1D',
+              '${data.summary.totalProspects}\uBA85',
+            ),
+            _MetricCard(
+              '\uC774\uBC88\uB2EC \uB9E4\uCD9C',
+              money.format(data.summary.monthRevenue),
+            ),
+            _MetricCard(
+              '\uC774\uBC88\uB2EC \uC21C\uC774\uC775',
+              money.format(data.summary.monthProfit),
+            ),
           ],
         ),
-        const SizedBox(height: 18),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
+        const SizedBox(height: 14),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 1060;
+            final chart = _MonthlyTrendChart(monthly: data.summary.monthly);
+            final settlement = _SettlementCard(monthly: data.summary.monthly);
+            if (!wide) {
+              return Column(
+                children: [chart, const SizedBox(height: 14), settlement],
+              );
+            }
+            return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '1월~12월 정산현황',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 12),
-                DataTable(
-                  columns: const [
-                    DataColumn(label: Text('월')),
-                    DataColumn(label: Text('분양')),
-                    DataColumn(label: Text('구매')),
-                    DataColumn(label: Text('매출')),
-                    DataColumn(label: Text('원가')),
-                    DataColumn(label: Text('순이익')),
-                  ],
-                  rows: data.summary.monthly
-                      .map(
-                        (m) => DataRow(
-                          cells: [
-                            DataCell(Text('${m.month}월')),
-                            DataCell(Text('${m.adoptionCount}')),
-                            DataCell(Text('${m.purchaseCount}')),
-                            DataCell(Text(money.format(m.revenue))),
-                            DataCell(Text(money.format(m.cost))),
-                            DataCell(Text(money.format(m.profit))),
-                          ],
-                        ),
-                      )
-                      .toList(),
-                ),
+                Expanded(flex: 6, child: chart),
+                const SizedBox(width: 14),
+                Expanded(flex: 5, child: settlement),
               ],
-            ),
-          ),
+            );
+          },
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _RankingCard(
-                title: '이번달 분양 순위',
+                title: '\uC774\uBC88\uB2EC \uBD84\uC591 \uC21C\uC704',
                 items: data.summary.adoptionRanking,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: _RankingCard(
-                title: '이번달 구매 순위',
+                title: '\uC774\uBC88\uB2EC \uAD6C\uB9E4 \uC21C\uC704',
                 items: data.summary.purchaseRanking,
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _MonthlyTrendChart extends StatelessWidget {
+  const _MonthlyTrendChart({required this.monthly});
+
+  final List<MonthlySettlement> monthly;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxValue = monthly.fold<double>(1, (max, item) {
+      final value = item.adoptionCount > item.purchaseCount
+          ? item.adoptionCount
+          : item.purchaseCount;
+      return value > max ? value.toDouble() : max;
+    });
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '\uC6D4\uBCC4 \uBD84\uC591 / \uAD6C\uB9E4 \uCD94\uC774',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '\uACE8\uB4DC: \uBD84\uC591 \u00B7 \uBBFC\uD2B8: \uAD6C\uB9E4',
+              style: TextStyle(fontSize: 12, color: HamsterColors.softBrown),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 240,
+              child: BarChart(
+                BarChartData(
+                  maxY: maxValue + 1,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (_) => const FlLine(
+                      color: HamsterColors.line,
+                      strokeWidth: 0.6,
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 26,
+                        getTitlesWidget: (value, meta) {
+                          final month = value.toInt() + 1;
+                          if (month < 1 || month > 12) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              '$month\uC6D4',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  barGroups: [
+                    for (var i = 0; i < monthly.length; i++)
+                      BarChartGroupData(
+                        x: i,
+                        barsSpace: 3,
+                        barRods: [
+                          BarChartRodData(
+                            toY: monthly[i].adoptionCount.toDouble(),
+                            width: 8,
+                            borderRadius: BorderRadius.circular(4),
+                            color: HamsterColors.gold,
+                          ),
+                          BarChartRodData(
+                            toY: monthly[i].purchaseCount.toDouble(),
+                            width: 8,
+                            borderRadius: BorderRadius.circular(4),
+                            color: HamsterColors.mint,
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettlementCard extends StatelessWidget {
+  const _SettlementCard({required this.monthly});
+
+  final List<MonthlySettlement> monthly;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = NumberFormat.compactCurrency(
+      locale: 'ko_KR',
+      symbol: '\u20A9',
+    );
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '\uC815\uC0B0\uD604\uD669',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowHeight: 34,
+                dataRowMinHeight: 32,
+                dataRowMaxHeight: 32,
+                horizontalMargin: 8,
+                columnSpacing: 14,
+                headingTextStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: HamsterColors.brown,
+                ),
+                dataTextStyle: const TextStyle(
+                  fontSize: 12,
+                  color: HamsterColors.brown,
+                ),
+                columns: const [
+                  DataColumn(label: Text('\uC6D4')),
+                  DataColumn(label: Text('\uBD84\uC591')),
+                  DataColumn(label: Text('\uAD6C\uB9E4')),
+                  DataColumn(label: Text('\uB9E4\uCD9C')),
+                  DataColumn(label: Text('\uC6D0\uAC00')),
+                  DataColumn(label: Text('\uC21C\uC775')),
+                ],
+                rows: monthly
+                    .map(
+                      (m) => DataRow(
+                        cells: [
+                          DataCell(Text('${m.month}\uC6D4')),
+                          DataCell(Text('${m.adoptionCount}')),
+                          DataCell(Text('${m.purchaseCount}')),
+                          DataCell(Text(money.format(m.revenue))),
+                          DataCell(Text(money.format(m.cost))),
+                          DataCell(Text(money.format(m.profit))),
+                        ],
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -437,41 +609,124 @@ class CustomerDbPage extends StatelessWidget {
         const SizedBox(height: 14),
         Expanded(
           child: Card(
-            child: SingleChildScrollView(
-              child: DataTable(
-                columns: const [
-                  DataColumn(label: Text('날짜')),
-                  DataColumn(label: Text('고객명')),
-                  DataColumn(label: Text('성별')),
-                  DataColumn(label: Text('휴대폰번호')),
-                  DataColumn(label: Text('분양')),
-                  DataColumn(label: Text('구매')),
-                  DataColumn(label: Text('매출')),
-                  DataColumn(label: Text('원가')),
-                  DataColumn(label: Text('메모')),
-                ],
-                rows: customers
-                    .map(
-                      (c) => DataRow(
-                        cells: [
-                          DataCell(Text(c.date)),
-                          DataCell(Text(c.customerName)),
-                          DataCell(Text(c.gender)),
-                          DataCell(Text(c.phone)),
-                          DataCell(Text(c.adoption)),
-                          DataCell(Text(c.purchase)),
-                          DataCell(Text(money.format(c.revenue))),
-                          DataCell(Text(money.format(c.cost))),
-                          DataCell(Text(c.memo)),
-                        ],
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SingleChildScrollView(
+                    child: DataTable(
+                      headingRowHeight: 38,
+                      dataRowMinHeight: 38,
+                      dataRowMaxHeight: 38,
+                      horizontalMargin: 8,
+                      columnSpacing: 12,
+                      headingTextStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: HamsterColors.brown,
                       ),
-                    )
-                    .toList(),
+                      dataTextStyle: const TextStyle(
+                        fontSize: 12,
+                        color: HamsterColors.brown,
+                      ),
+                      columns: const [
+                        DataColumn(
+                          label: _TableHeader('\uB0A0\uC9DC', width: 86),
+                        ),
+                        DataColumn(
+                          label: _TableHeader('\uACE0\uAC1D\uBA85', width: 76),
+                        ),
+                        DataColumn(
+                          label: _TableHeader('\uC131\uBCC4', width: 44),
+                        ),
+                        DataColumn(
+                          label: _TableHeader(
+                            '\uD734\uB300\uD3F0\uBC88\uD638',
+                            width: 116,
+                          ),
+                        ),
+                        DataColumn(
+                          label: _TableHeader('\uBD84\uC591', width: 120),
+                        ),
+                        DataColumn(
+                          label: _TableHeader('\uAD6C\uB9E4', width: 130),
+                        ),
+                        DataColumn(
+                          label: _TableHeader('\uB9E4\uCD9C', width: 86),
+                        ),
+                        DataColumn(
+                          label: _TableHeader('\uC6D0\uAC00', width: 86),
+                        ),
+                        DataColumn(
+                          label: _TableHeader('\uBA54\uBAA8', width: 420),
+                        ),
+                      ],
+                      rows: customers
+                          .map(
+                            (c) => DataRow(
+                              cells: [
+                                DataCell(_TableText(c.date, width: 86)),
+                                DataCell(_TableText(c.customerName, width: 76)),
+                                DataCell(_TableText(c.gender, width: 44)),
+                                DataCell(_TableText(c.phone, width: 116)),
+                                DataCell(_TableText(c.adoption, width: 120)),
+                                DataCell(_TableText(c.purchase, width: 130)),
+                                DataCell(
+                                  _TableText(
+                                    money.format(c.revenue),
+                                    width: 86,
+                                  ),
+                                ),
+                                DataCell(
+                                  _TableText(money.format(c.cost), width: 86),
+                                ),
+                                DataCell(_TableText(c.memo, width: 420)),
+                              ],
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TableHeader extends StatelessWidget {
+  const _TableHeader(this.text, {required this.width});
+
+  final String text;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(width: width, child: Text(text, softWrap: false));
+  }
+}
+
+class _TableText extends StatelessWidget {
+  const _TableText(this.text, {required this.width});
+
+  final String text;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: Text(
+        text,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.visible,
+      ),
     );
   }
 }
