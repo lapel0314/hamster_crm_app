@@ -8,10 +8,17 @@ abstract class CrmStore {
   Future<int> addProspect(Prospect prospect);
   Future<List<Customer>> customers({String query = ''});
   Future<List<Prospect>> prospects({String query = ''});
+  Future<List<Customer>> deletedCustomers();
+  Future<List<Prospect>> deletedProspects();
   Future<void> updateCustomer(Customer customer);
   Future<void> updateProspect(Prospect prospect);
   Future<void> softDeleteCustomer(int id);
   Future<void> softDeleteProspect(int id);
+  Future<void> restoreCustomer(int id);
+  Future<void> restoreProspect(int id);
+  Future<void> hardDeleteCustomer(int id);
+  Future<void> hardDeleteProspect(int id);
+  Future<void> purgeDeletedOlderThan(Duration age);
   Future<DashboardSummary> dashboardSummary();
 }
 
@@ -73,6 +80,28 @@ class CrmRepository implements CrmStore {
   }
 
   @override
+  Future<List<Customer>> deletedCustomers() async {
+    final db = await database.instance;
+    final rows = await db.query(
+      'customers',
+      where: 'deleted_at IS NOT NULL',
+      orderBy: 'deleted_at DESC, id DESC',
+    );
+    return rows.map(Customer.fromMap).toList();
+  }
+
+  @override
+  Future<List<Prospect>> deletedProspects() async {
+    final db = await database.instance;
+    final rows = await db.query(
+      'prospects',
+      where: 'deleted_at IS NOT NULL',
+      orderBy: 'deleted_at DESC, id DESC',
+    );
+    return rows.map(Prospect.fromMap).toList();
+  }
+
+  @override
   Future<void> updateCustomer(Customer customer) async {
     final id = customer.id;
     if (id == null) return;
@@ -111,6 +140,56 @@ class CrmRepository implements CrmStore {
       {'deleted_at': DateTime.now().toIso8601String()},
       where: 'id = ?',
       whereArgs: [id],
+    );
+  }
+
+  @override
+  Future<void> restoreCustomer(int id) async {
+    final db = await database.instance;
+    await db.update(
+      'customers',
+      {'deleted_at': null},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  @override
+  Future<void> restoreProspect(int id) async {
+    final db = await database.instance;
+    await db.update(
+      'prospects',
+      {'deleted_at': null},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  @override
+  Future<void> hardDeleteCustomer(int id) async {
+    final db = await database.instance;
+    await db.delete('customers', where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<void> hardDeleteProspect(int id) async {
+    final db = await database.instance;
+    await db.delete('prospects', where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<void> purgeDeletedOlderThan(Duration age) async {
+    final db = await database.instance;
+    final cutoff = DateTime.now().subtract(age).toIso8601String();
+    await db.delete(
+      'customers',
+      where: 'deleted_at IS NOT NULL AND deleted_at < ?',
+      whereArgs: [cutoff],
+    );
+    await db.delete(
+      'prospects',
+      where: 'deleted_at IS NOT NULL AND deleted_at < ?',
+      whereArgs: [cutoff],
     );
   }
 
@@ -174,6 +253,8 @@ class CrmRepository implements CrmStore {
     return buildRanking(values);
   }
 }
+
+const Object _keepDeletedAt = Object();
 
 class InMemoryCrmRepository implements CrmStore {
   InMemoryCrmRepository({List<Customer>? customers, List<Prospect>? prospects})
@@ -269,6 +350,20 @@ class InMemoryCrmRepository implements CrmStore {
   }
 
   @override
+  Future<List<Customer>> deletedCustomers() async {
+    final filtered = _customers.where((c) => c.deletedAt != null).toList();
+    filtered.sort((a, b) => (b.deletedAt ?? '').compareTo(a.deletedAt ?? ''));
+    return filtered;
+  }
+
+  @override
+  Future<List<Prospect>> deletedProspects() async {
+    final filtered = _prospects.where((p) => p.deletedAt != null).toList();
+    filtered.sort((a, b) => (b.deletedAt ?? '').compareTo(a.deletedAt ?? ''));
+    return filtered;
+  }
+
+  @override
   Future<void> updateCustomer(Customer customer) async {
     final id = customer.id;
     if (id == null) return;
@@ -306,6 +401,47 @@ class InMemoryCrmRepository implements CrmStore {
       id,
       deletedAt: DateTime.now().toIso8601String(),
     );
+  }
+
+  @override
+  Future<void> restoreCustomer(int id) async {
+    final index = _customers.indexWhere((c) => c.id == id);
+    if (index == -1) return;
+    _customers[index] = _copyCustomer(_customers[index], id, deletedAt: null);
+  }
+
+  @override
+  Future<void> restoreProspect(int id) async {
+    final index = _prospects.indexWhere((p) => p.id == id);
+    if (index == -1) return;
+    _prospects[index] = _copyProspect(_prospects[index], id, deletedAt: null);
+  }
+
+  @override
+  Future<void> hardDeleteCustomer(int id) async {
+    _customers.removeWhere((c) => c.id == id);
+  }
+
+  @override
+  Future<void> hardDeleteProspect(int id) async {
+    _prospects.removeWhere((p) => p.id == id);
+  }
+
+  @override
+  Future<void> purgeDeletedOlderThan(Duration age) async {
+    final cutoff = DateTime.now().subtract(age);
+    _customers.removeWhere((c) {
+      final deletedAt = c.deletedAt == null
+          ? null
+          : DateTime.tryParse(c.deletedAt!);
+      return deletedAt != null && deletedAt.isBefore(cutoff);
+    });
+    _prospects.removeWhere((p) {
+      final deletedAt = p.deletedAt == null
+          ? null
+          : DateTime.tryParse(p.deletedAt!);
+      return deletedAt != null && deletedAt.isBefore(cutoff);
+    });
   }
 
   @override
@@ -359,7 +495,11 @@ class InMemoryCrmRepository implements CrmStore {
     ].any((value) => value.contains(q));
   }
 
-  Customer _copyCustomer(Customer c, int id, {String? deletedAt}) {
+  Customer _copyCustomer(
+    Customer c,
+    int id, {
+    Object? deletedAt = _keepDeletedAt,
+  }) {
     return Customer(
       id: id,
       date: c.date,
@@ -373,11 +513,17 @@ class InMemoryCrmRepository implements CrmStore {
       memo: c.memo,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
-      deletedAt: deletedAt ?? c.deletedAt,
+      deletedAt: identical(deletedAt, _keepDeletedAt)
+          ? c.deletedAt
+          : deletedAt as String?,
     );
   }
 
-  Prospect _copyProspect(Prospect p, int id, {String? deletedAt}) {
+  Prospect _copyProspect(
+    Prospect p,
+    int id, {
+    Object? deletedAt = _keepDeletedAt,
+  }) {
     return Prospect(
       id: id,
       consultationDate: p.consultationDate,
@@ -392,7 +538,9 @@ class InMemoryCrmRepository implements CrmStore {
       memo: p.memo,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
-      deletedAt: deletedAt ?? p.deletedAt,
+      deletedAt: identical(deletedAt, _keepDeletedAt)
+          ? p.deletedAt
+          : deletedAt as String?,
     );
   }
 }

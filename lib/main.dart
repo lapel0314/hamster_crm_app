@@ -46,6 +46,7 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
   final searchController = TextEditingController();
 
   Future<_HomeData> _load() async {
+    await widget.repository.purgeDeletedOlderThan(const Duration(days: 30));
     return _HomeData(
       summary: await widget.repository.dashboardSummary(),
       customers: await widget.repository.customers(
@@ -54,6 +55,8 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
       prospects: await widget.repository.prospects(
         query: searchController.text,
       ),
+      deletedCustomers: await widget.repository.deletedCustomers(),
+      deletedProspects: await widget.repository.deletedProspects(),
     );
   }
 
@@ -63,6 +66,7 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
       'customer-registration' => '고객등록',
       'customers' => '고객DB',
       'prospects' => '가망고객',
+      'trash' => '휴지통',
       _ => '대시보드',
     };
   }
@@ -129,6 +133,12 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
         searchController: searchController,
         onChanged: _refresh,
       ),
+      '휴지통' => TrashPage(
+        repository: widget.repository,
+        deletedCustomers: data.deletedCustomers,
+        deletedProspects: data.deletedProspects,
+        onChanged: _refresh,
+      ),
       _ => _DashboardPage(data: data),
     };
   }
@@ -138,11 +148,15 @@ class _HomeData {
   final DashboardSummary summary;
   final List<Customer> customers;
   final List<Prospect> prospects;
+  final List<Customer> deletedCustomers;
+  final List<Prospect> deletedProspects;
 
   const _HomeData({
     required this.summary,
     required this.customers,
     required this.prospects,
+    required this.deletedCustomers,
+    required this.deletedProspects,
   });
 }
 
@@ -159,6 +173,7 @@ class _Sidebar extends StatelessWidget {
       ('\uACE0\uAC1D\uB4F1\uB85D', Icons.person_add_alt_1_rounded),
       ('\uACE0\uAC1DDB', Icons.table_chart_rounded),
       ('\uAC00\uB9DD\uACE0\uAC1D', Icons.groups_rounded),
+      ('\uD734\uC9C0\uD1B5', Icons.delete_outline_rounded),
     ];
     return Container(
       width: 300,
@@ -1849,6 +1864,327 @@ class _ProspectsPageState extends State<ProspectsPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class TrashPage extends StatelessWidget {
+  const TrashPage({
+    super.key,
+    required this.repository,
+    required this.deletedCustomers,
+    required this.deletedProspects,
+    required this.onChanged,
+  });
+
+  final CrmStore repository;
+  final List<Customer> deletedCustomers;
+  final List<Prospect> deletedProspects;
+  final VoidCallback onChanged;
+
+  Future<bool> _confirm(BuildContext context, String message) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('\uD655\uC778'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('\uCDE8\uC18C'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('\uD655\uC778'),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _restoreCustomer(BuildContext context, Customer customer) async {
+    final id = customer.id;
+    if (id == null) return;
+    await repository.restoreCustomer(id);
+    onChanged();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '\uACE0\uAC1D\uC744 \uBCF5\uAD6C\uD588\uC2B5\uB2C8\uB2E4.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _restoreProspect(BuildContext context, Prospect prospect) async {
+    final id = prospect.id;
+    if (id == null) return;
+    await repository.restoreProspect(id);
+    onChanged();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '\uAC00\uB9DD\uACE0\uAC1D\uC744 \uBCF5\uAD6C\uD588\uC2B5\uB2C8\uB2E4.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _hardDeleteCustomer(
+    BuildContext context,
+    Customer customer,
+  ) async {
+    final id = customer.id;
+    if (id == null) return;
+    if (!await _confirm(
+      context,
+      '\uC644\uC804 \uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?',
+    )) {
+      return;
+    }
+    await repository.hardDeleteCustomer(id);
+    onChanged();
+  }
+
+  Future<void> _hardDeleteProspect(
+    BuildContext context,
+    Prospect prospect,
+  ) async {
+    final id = prospect.id;
+    if (id == null) return;
+    if (!await _confirm(
+      context,
+      '\uC644\uC804 \uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?',
+    )) {
+      return;
+    }
+    await repository.hardDeleteProspect(id);
+    onChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        Text(
+          '\uD734\uC9C0\uD1B5',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          '30\uC77C\uC774 \uC9C0\uB09C \uC0AD\uC81C \uB370\uC774\uD130\uB294 \uC571 \uC2E4\uD589 \uC2DC \uC790\uB3D9\uC73C\uB85C \uC644\uC804 \uC0AD\uC81C\uB429\uB2C8\uB2E4.',
+          style: TextStyle(
+            color: HamsterColors.softBrown,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _TrashCustomerTable(
+          customers: deletedCustomers,
+          onRestore: (customer) => _restoreCustomer(context, customer),
+          onHardDelete: (customer) => _hardDeleteCustomer(context, customer),
+        ),
+        const SizedBox(height: 16),
+        _TrashProspectTable(
+          prospects: deletedProspects,
+          onRestore: (prospect) => _restoreProspect(context, prospect),
+          onHardDelete: (prospect) => _hardDeleteProspect(context, prospect),
+        ),
+      ],
+    );
+  }
+}
+
+class _TrashCustomerTable extends StatelessWidget {
+  const _TrashCustomerTable({
+    required this.customers,
+    required this.onRestore,
+    required this.onHardDelete,
+  });
+
+  final List<Customer> customers;
+  final ValueChanged<Customer> onRestore;
+  final ValueChanged<Customer> onHardDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return _TrashCard(
+      title: '\uACE0\uAC1DDB',
+      emptyText:
+          '\uC0AD\uC81C\uB41C \uACE0\uAC1D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.',
+      isEmpty: customers.isEmpty,
+      child: DataTable(
+        headingRowHeight: 38,
+        dataRowMinHeight: 42,
+        dataRowMaxHeight: 42,
+        horizontalMargin: 8,
+        columnSpacing: 12,
+        columns: const [
+          DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 160)),
+          DataColumn(label: _TableHeader('\uC0AD\uC81C\uC77C', width: 150)),
+          DataColumn(label: _TableHeader('\uACE0\uAC1D\uBA85', width: 120)),
+          DataColumn(
+            label: _TableHeader('\uD734\uB300\uD3F0\uBC88\uD638', width: 130),
+          ),
+          DataColumn(label: _TableHeader('\uBA54\uBAA8', width: 420)),
+        ],
+        rows: customers
+            .map(
+              (c) => DataRow(
+                cells: [
+                  DataCell(
+                    _TrashActions(
+                      onRestore: () => onRestore(c),
+                      onHardDelete: () => onHardDelete(c),
+                    ),
+                  ),
+                  DataCell(_TableText(c.deletedAt ?? '-', width: 150)),
+                  DataCell(_TableText(c.customerName, width: 120)),
+                  DataCell(_TableText(c.phone, width: 130)),
+                  DataCell(_TableText(c.memo, width: 420)),
+                ],
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _TrashProspectTable extends StatelessWidget {
+  const _TrashProspectTable({
+    required this.prospects,
+    required this.onRestore,
+    required this.onHardDelete,
+  });
+
+  final List<Prospect> prospects;
+  final ValueChanged<Prospect> onRestore;
+  final ValueChanged<Prospect> onHardDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return _TrashCard(
+      title: '\uAC00\uB9DD\uACE0\uAC1D',
+      emptyText:
+          '\uC0AD\uC81C\uB41C \uAC00\uB9DD\uACE0\uAC1D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.',
+      isEmpty: prospects.isEmpty,
+      child: DataTable(
+        headingRowHeight: 38,
+        dataRowMinHeight: 42,
+        dataRowMaxHeight: 42,
+        horizontalMargin: 8,
+        columnSpacing: 12,
+        columns: const [
+          DataColumn(label: _TableHeader('\uAD00\uB9AC', width: 160)),
+          DataColumn(label: _TableHeader('\uC0AD\uC81C\uC77C', width: 150)),
+          DataColumn(label: _TableHeader('\uACE0\uAC1D\uBA85', width: 120)),
+          DataColumn(
+            label: _TableHeader('\uD734\uB300\uD3F0\uBC88\uD638', width: 130),
+          ),
+          DataColumn(label: _TableHeader('\uBA54\uBAA8', width: 420)),
+        ],
+        rows: prospects
+            .map(
+              (p) => DataRow(
+                cells: [
+                  DataCell(
+                    _TrashActions(
+                      onRestore: () => onRestore(p),
+                      onHardDelete: () => onHardDelete(p),
+                    ),
+                  ),
+                  DataCell(_TableText(p.deletedAt ?? '-', width: 150)),
+                  DataCell(_TableText(p.customerName, width: 120)),
+                  DataCell(_TableText(p.phone, width: 130)),
+                  DataCell(_TableText(p.memo, width: 420)),
+                ],
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _TrashCard extends StatelessWidget {
+  const _TrashCard({
+    required this.title,
+    required this.emptyText,
+    required this.isEmpty,
+    required this.child,
+  });
+
+  final String title;
+  final String emptyText;
+  final bool isEmpty;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            if (isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                child: Center(child: Text(emptyText)),
+              )
+            else
+              Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: child,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrashActions extends StatelessWidget {
+  const _TrashActions({required this.onRestore, required this.onHardDelete});
+
+  final VoidCallback onRestore;
+  final VoidCallback onHardDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final compactStyle = TextButton.styleFrom(
+      minimumSize: const Size(58, 32),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+    return SizedBox(
+      width: 160,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: onRestore,
+            style: compactStyle,
+            child: const Text('\uBCF5\uAD6C'),
+          ),
+          TextButton(
+            onPressed: onHardDelete,
+            style: compactStyle,
+            child: const Text('\uC644\uC804\uC0AD\uC81C'),
+          ),
+        ],
+      ),
     );
   }
 }

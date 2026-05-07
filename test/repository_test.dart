@@ -107,5 +107,67 @@ void main() {
 
     expect(await repository.customers(), isEmpty);
     expect(await repository.prospects(), isEmpty);
+    expect(await repository.deletedCustomers(), hasLength(1));
+    expect(await repository.deletedProspects(), hasLength(1));
+  });
+
+  test('restores hard deletes and purges trash records', () async {
+    const now = '2026-05-07T00:00:00';
+    final customerId = await repository.addCustomer(
+      const Customer(
+        date: '2026-05-07',
+        customerName: '휴지통고객',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    final prospectId = await repository.addProspect(
+      const Prospect(
+        consultationDate: '2026-05-07',
+        customerName: '휴지통가망',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await repository.softDeleteCustomer(customerId);
+    await repository.softDeleteProspect(prospectId);
+    await repository.restoreCustomer(customerId);
+    await repository.restoreProspect(prospectId);
+
+    expect(await repository.customers(query: '휴지통고객'), hasLength(1));
+    expect(await repository.prospects(query: '휴지통가망'), hasLength(1));
+
+    await repository.softDeleteCustomer(customerId);
+    await repository.softDeleteProspect(prospectId);
+    await repository.hardDeleteCustomer(customerId);
+    await repository.hardDeleteProspect(prospectId);
+
+    expect(await repository.deletedCustomers(), isEmpty);
+    expect(await repository.deletedProspects(), isEmpty);
+
+    await repository.addCustomer(
+      const Customer(
+        date: '2026-05-07',
+        customerName: '오래된삭제고객',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: '2026-01-01T00:00:00',
+      ),
+    );
+    await repository.addProspect(
+      const Prospect(
+        consultationDate: '2026-05-07',
+        customerName: '오래된삭제가망',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: '2026-01-01T00:00:00',
+      ),
+    );
+
+    await repository.purgeDeletedOlderThan(const Duration(days: 30));
+
+    expect(await repository.deletedCustomers(), isEmpty);
+    expect(await repository.deletedProspects(), isEmpty);
   });
 }
