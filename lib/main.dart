@@ -1001,7 +1001,7 @@ class _CheckLine extends StatelessWidget {
   }
 }
 
-class CustomerDbPage extends StatelessWidget {
+class CustomerDbPage extends StatefulWidget {
   const CustomerDbPage({
     super.key,
     required this.repository,
@@ -1014,6 +1014,63 @@ class CustomerDbPage extends StatelessWidget {
   final List<Customer> customers;
   final TextEditingController searchController;
   final VoidCallback onChanged;
+
+  @override
+  State<CustomerDbPage> createState() => _CustomerDbPageState();
+}
+
+class _CustomerDbPageState extends State<CustomerDbPage> {
+  DateTimeRange? dateFilter;
+
+  List<Customer> get filteredCustomers {
+    final range = dateFilter;
+    if (range == null) return widget.customers;
+    return widget.customers.where((customer) {
+      final date = DateTime.tryParse(customer.date);
+      if (date == null) return false;
+      final day = DateTime(date.year, date.month, date.day);
+      final start = DateTime(
+        range.start.year,
+        range.start.month,
+        range.start.day,
+      );
+      final end = DateTime(range.end.year, range.end.month, range.end.day);
+      return !day.isBefore(start) && !day.isAfter(end);
+    }).toList();
+  }
+
+  String get dateFilterLabel {
+    final range = dateFilter;
+    if (range == null) return '\uB0A0\uC9DC \uD544\uD130';
+    final start = DateFormat('MM/dd').format(range.start);
+    final end = DateFormat('MM/dd').format(range.end);
+    return '$start - $end';
+  }
+
+  Future<void> _pickDateFilter() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      initialDateRange: dateFilter,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 5),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
+            primary: HamsterColors.brown,
+            secondary: HamsterColors.gold,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked == null) return;
+    setState(() => dateFilter = picked);
+  }
+
+  void _clearDateFilter() {
+    setState(() => dateFilter = null);
+  }
 
   Future<void> _showDetail(BuildContext context, Customer customer) async {
     await showDialog<void>(
@@ -1028,8 +1085,8 @@ class CustomerDbPage extends StatelessWidget {
       builder: (context) => _CustomerEditDialog(customer: customer),
     );
     if (updated == null) return;
-    await repository.updateCustomer(updated);
-    onChanged();
+    await widget.repository.updateCustomer(updated);
+    widget.onChanged();
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1062,8 +1119,8 @@ class CustomerDbPage extends StatelessWidget {
       ),
     );
     if (confirmed != true || customer.id == null) return;
-    await repository.softDeleteCustomer(customer.id!);
-    onChanged();
+    await widget.repository.softDeleteCustomer(customer.id!);
+    widget.onChanged();
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1078,6 +1135,7 @@ class CustomerDbPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final money = NumberFormat('#,###?');
+    final visibleCustomers = filteredCustomers;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1086,7 +1144,40 @@ class CustomerDbPage extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: 14),
-        _SearchBar(controller: searchController, onSearch: onChanged),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SizedBox(
+              width: 360,
+              child: _SearchBar(
+                controller: widget.searchController,
+                onSearch: widget.onChanged,
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: _pickDateFilter,
+              icon: const Icon(Icons.calendar_month_rounded, size: 18),
+              label: Text(dateFilterLabel),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(138, 52),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                textStyle: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+            if (dateFilter != null)
+              IconButton.filledTonal(
+                onPressed: _clearDateFilter,
+                icon: const Icon(Icons.close_rounded, size: 18),
+                tooltip: '\uB0A0\uC9DC \uD544\uD130 \uD574\uC81C',
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(40, 40),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+          ],
+        ),
         const SizedBox(height: 14),
         Expanded(
           child: Card(
@@ -1114,7 +1205,7 @@ class CustomerDbPage extends StatelessWidget {
                       ),
                       columns: const [
                         DataColumn(
-                          label: _TableHeader('\uAD00\uB9AC', width: 160),
+                          label: _TableHeader('\uAD00\uB9AC', width: 106),
                         ),
                         DataColumn(
                           label: _TableHeader('\uB0A0\uC9DC', width: 86),
@@ -1147,7 +1238,7 @@ class CustomerDbPage extends StatelessWidget {
                           label: _TableHeader('\uBA54\uBAA8', width: 420),
                         ),
                       ],
-                      rows: customers
+                      rows: visibleCustomers
                           .map(
                             (c) => DataRow(
                               cells: [
@@ -1235,30 +1326,44 @@ class _RowActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compactStyle = TextButton.styleFrom(
-      minimumSize: const Size(44, 32),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+    final compactStyle = IconButton.styleFrom(
+      minimumSize: const Size(30, 30),
+      fixedSize: const Size(30, 30),
+      padding: EdgeInsets.zero,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      iconSize: 17,
     );
     return SizedBox(
-      width: 160,
+      width: 106,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextButton(
-            onPressed: onDetail,
-            style: compactStyle,
-            child: const Text('\uC0C1\uC138'),
+          Tooltip(
+            message: '\uC0C1\uC138',
+            child: IconButton(
+              onPressed: onDetail,
+              style: compactStyle,
+              icon: const Icon(Icons.visibility_rounded),
+            ),
           ),
-          TextButton(
-            onPressed: onEdit,
-            style: compactStyle,
-            child: const Text('\uC218\uC815'),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: '\uC218\uC815',
+            child: IconButton(
+              onPressed: onEdit,
+              style: compactStyle,
+              icon: const Icon(Icons.edit_rounded),
+            ),
           ),
-          TextButton(
-            onPressed: onDelete,
-            style: compactStyle,
-            child: const Text('\uC0AD\uC81C'),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: '\uC0AD\uC81C',
+            child: IconButton(
+              onPressed: onDelete,
+              style: compactStyle,
+              color: Colors.redAccent,
+              icon: const Icon(Icons.delete_rounded),
+            ),
           ),
         ],
       ),
