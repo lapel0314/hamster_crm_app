@@ -154,69 +154,153 @@ class _Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pages = ['대시보드', '고객등록', '고객DB', '가망고객'];
+    final pages = [
+      ('\uB300\uC2DC\uBCF4\uB4DC', Icons.dashboard_rounded),
+      ('\uACE0\uAC1D\uB4F1\uB85D', Icons.person_add_alt_1_rounded),
+      ('\uACE0\uAC1DDB', Icons.table_chart_rounded),
+      ('\uAC00\uB9DD\uACE0\uAC1D', Icons.groups_rounded),
+    ];
     return Container(
-      width: 250,
+      width: 300,
       color: HamsterColors.brown,
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  'assets/byopet_icon.png',
-                  width: 38,
-                  height: 38,
-                  fit: BoxFit.cover,
-                ),
+      padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
               ),
-              const SizedBox(width: 10),
-              const Text(
-                '뵤펫',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            '로컬 오프라인 CRM',
-            style: TextStyle(color: HamsterColors.cream),
-          ),
-          const SizedBox(height: 30),
-          for (final page in pages)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: FilledButton.tonal(
-                onPressed: () => onSelected(page),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 48),
-                  alignment: Alignment.centerLeft,
-                  backgroundColor: selected == page
-                      ? HamsterColors.gold
-                      : HamsterColors.cream.withValues(alpha: 0.14),
-                  foregroundColor: selected == page
-                      ? HamsterColors.brown
-                      : Colors.white,
-                ),
-                child: Text(
-                  page,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.asset(
+                          'assets/byopet_icon.png',
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '\uBD64\uD3AB',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'CRM',
+                              style: TextStyle(
+                                color: HamsterColors.cream,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    '\uB85C\uCEEC \uC624\uD504\uB77C\uC778\uC73C\uB85C \uACE0\uAC1D \uAE30\uB85D\uC744 \uC548\uC804\uD558\uAC8C \uAD00\uB9AC\uD569\uB2C8\uB2E4.',
+                    style: TextStyle(
+                      color: HamsterColors.cream,
+                      height: 1.45,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
-          const Spacer(),
-          const Text(
-            '혼자 쓰는 PC용\n로그인 없이 바로 시작',
-            style: TextStyle(color: HamsterColors.cream, height: 1.5),
-          ),
-        ],
+            const SizedBox(height: 26),
+            const Text(
+              '\uBA54\uB274',
+              style: TextStyle(
+                color: HamsterColors.cream,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final page in pages)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: FilledButton.tonalIcon(
+                  onPressed: () => onSelected(page.$1),
+                  icon: Icon(page.$2, size: 23),
+                  label: Text(page.$1),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 62),
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    alignment: Alignment.centerLeft,
+                    textStyle: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
+                    backgroundColor: selected == page.$1
+                        ? HamsterColors.gold
+                        : HamsterColors.cream.withValues(alpha: 0.14),
+                    foregroundColor: selected == page.$1
+                        ? HamsterColors.brown
+                        : Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: HamsterColors.cream.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '\uC624\uB298 \uD560 \uC77C',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '\uACE0\uAC1D \uB4F1\uB85D \u2192 \uC0C1\uB2F4 \uBA54\uBAA8 \u2192 \uACE0\uAC1DDB \uD655\uC778',
+                    style: TextStyle(color: HamsterColors.cream, height: 1.45),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              '\uD63C\uC790 \uC4F0\uB294 PC\uC6A9 \u00B7 \uB85C\uADF8\uC778 \uC5C6\uC774 \uBC14\uB85C \uC2DC\uC791',
+              style: TextStyle(color: HamsterColors.cream, height: 1.5),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -502,7 +586,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   final cost = TextEditingController();
   final memo = TextEditingController();
   DateTime date = DateTime.now();
-  String gender = '미입력';
+  String gender = '\uBBF8\uC785\uB825';
 
   @override
   void dispose() {
@@ -512,11 +596,25 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     super.dispose();
   }
 
+  void _clear() {
+    for (final c in [name, phone, adoption, purchase, revenue, cost, memo]) {
+      c.clear();
+    }
+    setState(() {
+      date = DateTime.now();
+      gender = '\uBBF8\uC785\uB825';
+    });
+  }
+
   Future<void> _save() async {
     if (name.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('고객명을 입력해 주세요.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '\uACE0\uAC1D\uBA85\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694.',
+          ),
+        ),
+      );
       return;
     }
     final now = DateTime.now().toIso8601String();
@@ -537,65 +635,378 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     );
     widget.onSaved();
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('고객DB에 저장했습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '\uACE0\uAC1DDB\uC5D0 \uC800\uC7A5\uD588\uC2B5\uB2C8\uB2E4.',
+          ),
+        ),
+      );
     }
-    for (final c in [name, phone, adoption, purchase, revenue, cost, memo]) {
-      c.clear();
-    }
+    _clear();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        Text('고객등록', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 18),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(22),
-            child: Wrap(
-              spacing: 14,
-              runSpacing: 14,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 980;
+        final form = _CustomerEntryCard(
+          date: date,
+          onDateChanged: (v) => setState(() => date = v),
+          name: name,
+          gender: gender,
+          onGenderChanged: (v) => setState(() => gender = v),
+          phone: phone,
+          adoption: adoption,
+          purchase: purchase,
+          revenue: revenue,
+          cost: cost,
+          memo: memo,
+        );
+        final actions = _CustomerEntryActions(onSave: _save, onClear: _clear);
+
+        return ListView(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '\uACE0\uAC1D\uB4F1\uB85D',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        '\uACE0\uAC1D \uC815\uBCF4, \uAD6C\uB9E4 \uB0B4\uC5ED, \uBA54\uBAA8\uB97C \uD55C \uD654\uBA74\uC5D0\uC11C \uBC14\uB85C \uC785\uB825\uD569\uB2C8\uB2E4.',
+                        style: TextStyle(
+                          color: HamsterColors.softBrown,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (wide)
+                  FilledButton.icon(
+                    onPressed: _save,
+                    icon: const Icon(Icons.save_rounded),
+                    label: const Text('\uACE0\uAC1D \uC800\uC7A5'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(150, 54),
+                      textStyle: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            if (wide)
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(flex: 7, child: form),
+                    const SizedBox(width: 18),
+                    Expanded(flex: 3, child: actions),
+                  ],
+                ),
+              )
+            else ...[
+              form,
+              const SizedBox(height: 16),
+              actions,
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _CustomerEntryCard extends StatelessWidget {
+  const _CustomerEntryCard({
+    required this.date,
+    required this.onDateChanged,
+    required this.name,
+    required this.gender,
+    required this.onGenderChanged,
+    required this.phone,
+    required this.adoption,
+    required this.purchase,
+    required this.revenue,
+    required this.cost,
+    required this.memo,
+  });
+
+  final DateTime date;
+  final ValueChanged<DateTime> onDateChanged;
+  final TextEditingController name;
+  final String gender;
+  final ValueChanged<String> onGenderChanged;
+  final TextEditingController phone;
+  final TextEditingController adoption;
+  final TextEditingController purchase;
+  final TextEditingController revenue;
+  final TextEditingController cost;
+  final TextEditingController memo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _SectionTitle(
+              icon: Icons.badge_rounded,
+              title: '\uAE30\uBCF8 \uC815\uBCF4',
+              subtitle:
+                  '\uACE0\uAC1D \uC2DD\uBCC4\uC5D0 \uD544\uC694\uD55C \uB0B4\uC6A9\uC744 \uBA3C\uC800 \uCC44\uC6CC \uC8FC\uC138\uC694.',
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
               children: [
                 _DateButton(
-                  label: '날짜',
+                  label: '\uB0A0\uC9DC',
                   date: date,
-                  onChanged: (v) => setState(() => date = v),
+                  width: 260,
+                  onChanged: onDateChanged,
                 ),
-                _Field(label: '고객명', controller: name),
+                _Field(
+                  label: '\uACE0\uAC1D\uBA85',
+                  controller: name,
+                  width: 260,
+                ),
                 _Dropdown(
-                  label: '성별',
+                  label: '\uC131\uBCC4',
                   value: gender,
-                  values: const ['미입력', '남', '여'],
-                  onChanged: (v) => setState(() => gender = v),
+                  width: 180,
+                  values: const ['\uBBF8\uC785\uB825', '\uB0A8', '\uC5EC'],
+                  onChanged: onGenderChanged,
                 ),
-                _Field(label: '휴대폰번호', controller: phone),
-                _Field(label: '분양', controller: adoption),
-                _Field(label: '구매', controller: purchase),
-                _Field(label: '매출', controller: revenue, number: true),
-                _Field(label: '원가', controller: cost, number: true),
-                SizedBox(
-                  width: 700,
-                  child: TextField(
-                    controller: memo,
-                    minLines: 3,
-                    maxLines: 5,
-                    decoration: const InputDecoration(labelText: '메모'),
-                  ),
+                _Field(
+                  label: '\uD734\uB300\uD3F0\uBC88\uD638',
+                  controller: phone,
+                  width: 260,
                 ),
               ],
             ),
+            const SizedBox(height: 28),
+            const _SectionTitle(
+              icon: Icons.shopping_bag_rounded,
+              title: '\uBD84\uC591 \u00B7 \uAD6C\uB9E4 \u00B7 \uC815\uC0B0',
+              subtitle:
+                  '\uB300\uC2DC\uBCF4\uB4DC \uC9D1\uACC4\uC5D0 \uBC14\uB85C \uBC18\uC601\uB418\uB294 \uAE08\uC561 \uC815\uBCF4\uC785\uB2C8\uB2E4.',
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                _Field(label: '\uBD84\uC591', controller: adoption, width: 280),
+                _Field(label: '\uAD6C\uB9E4', controller: purchase, width: 280),
+                _Field(
+                  label: '\uB9E4\uCD9C',
+                  controller: revenue,
+                  number: true,
+                  width: 220,
+                ),
+                _Field(
+                  label: '\uC6D0\uAC00',
+                  controller: cost,
+                  number: true,
+                  width: 220,
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
+            const _SectionTitle(
+              icon: Icons.edit_note_rounded,
+              title: '\uC0C1\uB2F4 \uBA54\uBAA8',
+              subtitle:
+                  '\uC0AC\uC721 \uC548\uB0B4, \uC7AC\uBC29\uBB38 \uC608\uC815, \uD2B9\uC774\uC0AC\uD56D\uC744 \uB113\uAC8C \uB0A8\uACA8 \uC8FC\uC138\uC694.',
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: memo,
+              minLines: 7,
+              maxLines: 9,
+              decoration: const InputDecoration(
+                labelText: '\uBA54\uBAA8',
+                hintText:
+                    '\uC608: \uCC98\uC74C \uD0A4\uC6B0\uB294 \uACE0\uAC1D / \uD1A0\uC694\uC77C \uC7AC\uBC29\uBB38 \uC608\uC815 / \uCF00\uC774\uC9C0 \uC138\uD2B8 \uAD00\uC2EC',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomerEntryActions extends StatelessWidget {
+  const _CustomerEntryActions({required this.onSave, required this.onClear});
+
+  final VoidCallback onSave;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset(
+                  'assets/byopet_icon.png',
+                  width: 150,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              '\uB4F1\uB85D \uC804 \uCCB4\uD06C',
+              style: TextStyle(
+                color: HamsterColors.brown,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            const _CheckLine(
+              '\uACE0\uAC1D\uBA85\uC740 \uD544\uC218 \uC785\uB825',
+            ),
+            const _CheckLine(
+              '\uB9E4\uCD9C/\uC6D0\uAC00\uB294 \uC22B\uC790\uB85C \uC785\uB825',
+            ),
+            const _CheckLine(
+              '\uBA54\uBAA8\uB294 \uACE0\uAC1DDB \uC0C1\uC138\uBCF4\uAE30\uC5D0\uC11C \uD655\uC778',
+            ),
+            const SizedBox(height: 32),
+            FilledButton.icon(
+              onPressed: onSave,
+              icon: const Icon(Icons.save_rounded),
+              label: const Text('\uACE0\uAC1D \uC800\uC7A5'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(double.infinity, 64),
+                textStyle: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onClear,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('\uC785\uB825 \uCD08\uAE30\uD654'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 54),
+                textStyle: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: HamsterColors.gold.withValues(alpha: 0.22),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, color: HamsterColors.brown),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: HamsterColors.brown,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: HamsterColors.softBrown,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: _save,
-          icon: const Text('🐹'),
-          label: const Text('고객 저장'),
-        ),
       ],
+    );
+  }
+}
+
+class _CheckLine extends StatelessWidget {
+  const _CheckLine(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.check_circle_rounded, color: HamsterColors.mint),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: HamsterColors.brown,
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1332,7 +1743,7 @@ class _ProspectsPageState extends State<ProspectsPage> {
                   onChanged: (v) => setState(() => consultationDate = v),
                 ),
                 _DateButton(
-                  label: '\uC0C1\uB2F4\uB0A0\uC9DC',
+                  label: '\uBC29\uBB38\uC608\uC815',
                   date: visitDate,
                   onChanged: (v) => setState(() => visitDate = v),
                 ),
@@ -1373,7 +1784,7 @@ class _ProspectsPageState extends State<ProspectsPage> {
                     ),
                     DataColumn(
                       label: _TableHeader(
-                        '\uC0C1\uB2F4\uB0A0\uC9DC',
+                        '\uBC29\uBB38\uC608\uC815',
                         width: 92,
                       ),
                     ),
@@ -1521,15 +1932,17 @@ class _Field extends StatelessWidget {
     required this.label,
     required this.controller,
     this.number = false,
+    this.width = 220,
   });
   final String label;
   final TextEditingController controller;
   final bool number;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 220,
+      width: width,
       child: TextField(
         controller: controller,
         keyboardType: number ? TextInputType.number : TextInputType.text,
@@ -1545,16 +1958,18 @@ class _Dropdown extends StatelessWidget {
     required this.value,
     required this.values,
     required this.onChanged,
+    this.width = 220,
   });
   final String label;
   final String value;
   final List<String> values;
   final ValueChanged<String> onChanged;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 220,
+      width: width,
       child: DropdownButtonFormField<String>(
         initialValue: value,
         decoration: InputDecoration(labelText: label),
@@ -1572,15 +1987,17 @@ class _DateButton extends StatelessWidget {
     required this.label,
     required this.date,
     required this.onChanged,
+    this.width = 220,
   });
   final String label;
   final DateTime date;
   final ValueChanged<DateTime> onChanged;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 220,
+      width: width,
       child: OutlinedButton(
         onPressed: () async {
           final picked = await showDatePicker(
