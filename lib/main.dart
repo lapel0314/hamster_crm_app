@@ -1235,7 +1235,7 @@ class _CustomerDbPageState extends State<CustomerDbPage> {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat('#,###?');
+    final money = NumberFormat('#,###\uC6D0');
     final visibleCustomers = filteredCustomers;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1506,7 +1506,7 @@ class _CustomerDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat('#,###?');
+    final money = NumberFormat('#,###\uC6D0');
     return AlertDialog(
       title: Text('${customer.customerName} \uC0C1\uC138\uBCF4\uAE30'),
       content: SizedBox(
@@ -1544,7 +1544,7 @@ class _ProspectDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat('#,###?');
+    final money = NumberFormat('#,###\uC6D0');
     return AlertDialog(
       title: Text('${prospect.customerName} \uC0C1\uC138\uBCF4\uAE30'),
       content: SizedBox(
@@ -1632,7 +1632,7 @@ class _CustomerEditDialogState extends State<_CustomerEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('\uACE0\uAC1D \uC0AD\uC81C'),
+      title: const Text('\uACE0\uAC1D \uC218\uC815'),
       content: SizedBox(
         width: 720,
         child: SingleChildScrollView(
@@ -1647,7 +1647,7 @@ class _CustomerEditDialogState extends State<_CustomerEditDialog> {
               ),
               _Field(label: '\uACE0\uAC1D\uBA85', controller: name),
               _Dropdown(
-                label: '\uB0A0\uC9DC',
+                label: '\uC131\uBCC4',
                 value: gender,
                 values: const ['\uBBF8\uC785\uB825', '\uB0A8', '\uC5EC'],
                 onChanged: (v) => setState(() => gender = v),
@@ -1656,10 +1656,10 @@ class _CustomerEditDialogState extends State<_CustomerEditDialog> {
                 label: '\uD734\uB300\uD3F0\uBC88\uD638',
                 controller: phone,
               ),
-              _Field(label: '\uB0A0\uC9DC', controller: adoption),
-              _Field(label: '\uB0A0\uC9DC', controller: purchase),
-              _Field(label: '\uB0A0\uC9DC', controller: revenue, number: true),
-              _Field(label: '\uB0A0\uC9DC', controller: cost, number: true),
+              _Field(label: '\uBD84\uC591', controller: adoption),
+              _Field(label: '\uAD6C\uB9E4', controller: purchase),
+              _Field(label: '\uB9E4\uCD9C', controller: revenue, number: true),
+              _Field(label: '\uC6D0\uAC00', controller: cost, number: true),
               SizedBox(
                 width: 680,
                 child: TextField(
@@ -1678,7 +1678,7 @@ class _CustomerEditDialogState extends State<_CustomerEditDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('\uCDE8\uC18C'),
         ),
-        FilledButton(onPressed: _save, child: const Text('\uCDE8\uC18C')),
+        FilledButton(onPressed: _save, child: const Text('\uC800\uC7A5')),
       ],
     );
   }
@@ -1758,13 +1758,13 @@ class _ProspectEditDialogState extends State<_ProspectEditDialog> {
                 onChanged: (v) => setState(() => consultationDate = v),
               ),
               _DateButton(
-                label: '\uC0C1\uB2F4\uB0A0\uC9DC',
+                label: '\uBC29\uBB38\uC608\uC815',
                 date: visitDate,
                 onChanged: (v) => setState(() => visitDate = v),
               ),
               _Field(label: '\uACE0\uAC1D\uBA85', controller: name),
               _Dropdown(
-                label: '\uB0A0\uC9DC',
+                label: '\uC131\uBCC4',
                 value: gender,
                 values: const ['\uBBF8\uC785\uB825', '\uB0A8', '\uC5EC'],
                 onChanged: (v) => setState(() => gender = v),
@@ -1773,10 +1773,10 @@ class _ProspectEditDialogState extends State<_ProspectEditDialog> {
                 label: '\uD734\uB300\uD3F0\uBC88\uD638',
                 controller: phone,
               ),
-              _Field(label: '\uB0A0\uC9DC', controller: adoption),
-              _Field(label: '\uB0A0\uC9DC', controller: purchase),
-              _Field(label: '\uB0A0\uC9DC', controller: revenue, number: true),
-              _Field(label: '\uB0A0\uC9DC', controller: cost, number: true),
+              _Field(label: '\uBD84\uC591', controller: adoption),
+              _Field(label: '\uAD6C\uB9E4', controller: purchase),
+              _Field(label: '\uB9E4\uCD9C', controller: revenue, number: true),
+              _Field(label: '\uC6D0\uAC00', controller: cost, number: true),
               SizedBox(
                 width: 680,
                 child: TextField(
@@ -1795,7 +1795,7 @@ class _ProspectEditDialogState extends State<_ProspectEditDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('\uCDE8\uC18C'),
         ),
-        FilledButton(onPressed: _save, child: const Text('\uCDE8\uC18C')),
+        FilledButton(onPressed: _save, child: const Text('\uC800\uC7A5')),
       ],
     );
   }
@@ -1912,7 +1912,7 @@ class _ProspectsPageState extends State<ProspectsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat('#,###?');
+    final money = NumberFormat('#,###\uC6D0');
     return ListView(
       children: [
         Text(
