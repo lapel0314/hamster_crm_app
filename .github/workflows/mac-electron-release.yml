@@ -1,0 +1,42 @@
+name: macOS Electron Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to upload macOS zip assets to
+        required: true
+        default: v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build macOS portable zip
+        run: npm run dist:mac
+
+      - name: Upload macOS zip to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          gh release upload "$TAG" output/electron/*.zip --clobber
