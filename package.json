@@ -8,7 +8,8 @@
     "flutter:web": "flutter build web --release && node electron/patch-base-href.js",
     "electron:dev": "npm run flutter:web && electron .",
     "dist:win": "npm run flutter:web && electron-builder --win portable --x64",
-    "dist:mac": "npm run flutter:web && electron-builder --mac zip --x64 --arm64 --publish never"
+    "dist:mac": "npm run flutter:web && electron-builder --mac zip --x64 --arm64 --publish never",
+    "dist:mac:dmg": "npm run flutter:web && electron-builder --mac dmg --x64 --arm64 --publish never"
   },
   "build": {
     "appId": "com.byopet.hamstercrm",
