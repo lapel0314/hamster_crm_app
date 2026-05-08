@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -7,10 +9,12 @@ import 'package:hamster_crm_app/core/theme/app_theme.dart';
 import 'package:hamster_crm_app/data/models/customer.dart';
 import 'package:hamster_crm_app/data/models/prospect.dart';
 import 'package:hamster_crm_app/data/repositories/crm_repository.dart';
+import 'package:hamster_crm_app/data/repositories/platform_crm_store_stub.dart'
+    if (dart.library.html) 'package:hamster_crm_app/data/repositories/platform_crm_store_web.dart';
 
 void main() {
   final CrmStore repository = kIsWeb
-      ? InMemoryCrmRepository.seeded()
+      ? createPlatformCrmStore()
       : CrmRepository(AppDatabase());
   runApp(HamsterCrmApp(repository: repository));
 }
@@ -41,9 +45,24 @@ class HamsterHomePage extends StatefulWidget {
 }
 
 class _HamsterHomePageState extends State<HamsterHomePage> {
+  static const _dashboardPage = '\uB300\uC2DC\uBCF4\uB4DC';
+  static const _customerDbPage = '\uACE0\uAC1DDB';
+  static const _prospectsPage = '\uAC00\uB9DD\uACE0\uAC1D';
+  static const _autoRefreshInterval = Duration(seconds: 30);
+
   late String selectedPage = _initialPage();
   late Future<_HomeData> _dataFuture = _load();
   final searchController = TextEditingController();
+  Timer? _autoRefreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoRefreshTimer = Timer.periodic(
+      _autoRefreshInterval,
+      (_) => _refreshAutoUpdatedPages(),
+    );
+  }
 
   Future<_HomeData> _load() async {
     return _HomeData(
@@ -70,14 +89,34 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
     };
   }
 
+  bool get _shouldAutoRefreshCurrentPage {
+    return selectedPage == _dashboardPage ||
+        selectedPage == _customerDbPage ||
+        selectedPage == _prospectsPage;
+  }
+
   void _refresh() {
     setState(() {
       _dataFuture = _load();
     });
   }
 
+  Future<void> _refreshAndWait() {
+    final nextData = _load();
+    setState(() {
+      _dataFuture = nextData;
+    });
+    return nextData;
+  }
+
+  void _refreshAutoUpdatedPages() {
+    if (!mounted || !_shouldAutoRefreshCurrentPage) return;
+    _refresh();
+  }
+
   @override
   void dispose() {
+    _autoRefreshTimer?.cancel();
     searchController.dispose();
     super.dispose();
   }
@@ -118,7 +157,7 @@ class _HamsterHomePageState extends State<HamsterHomePage> {
     return switch (selectedPage) {
       '고객등록' => CustomerFormPage(
         repository: widget.repository,
-        onSaved: _refresh,
+        onSaved: _refreshAndWait,
       ),
       '고객DB' => CustomerDbPage(
         repository: widget.repository,
@@ -503,17 +542,31 @@ class _MonthlyValueLegend extends StatelessWidget {
   }
 }
 
-class _SettlementCard extends StatelessWidget {
+class _SettlementCard extends StatefulWidget {
   const _SettlementCard({required this.monthly});
 
   final List<MonthlySettlement> monthly;
 
   @override
+  State<_SettlementCard> createState() => _SettlementCardState();
+}
+
+class _SettlementCardState extends State<_SettlementCard> {
+  late int _selectedMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMonth = DateTime.now().month;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final money = NumberFormat('#,###\uC6D0');
-    final yearRevenue = monthly.fold<int>(0, (sum, item) => sum + item.revenue);
-    final yearCost = monthly.fold<int>(0, (sum, item) => sum + item.cost);
-    final yearProfit = yearRevenue - yearCost;
+    final money = NumberFormat('#,###원');
+    final selectedSettlement = widget.monthly.firstWhere(
+      (item) => item.month == _selectedMonth,
+      orElse: () => MonthlySettlement(month: _selectedMonth),
+    );
 
     return Card(
       child: Padding(
@@ -521,62 +574,79 @@ class _SettlementCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '\uC815\uC0B0\uD604\uD669',
-              style: Theme.of(context).textTheme.titleLarge,
+            Text('정산현황', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: List.generate(12, (index) {
+                final month = index + 1;
+                final selected = month == _selectedMonth;
+
+                return ChoiceChip(
+                  label: Text('$month월'),
+                  selected: selected,
+                  onSelected: (_) => setState(() => _selectedMonth = month),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  selectedColor: HamsterColors.gold.withValues(alpha: 0.35),
+                  backgroundColor: HamsterColors.input,
+                  side: BorderSide(
+                    color: selected ? HamsterColors.gold : HamsterColors.line,
+                  ),
+                  labelStyle: TextStyle(
+                    color: selected
+                        ? HamsterColors.brown
+                        : HamsterColors.softBrown,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                );
+              }),
             ),
             const SizedBox(height: 12),
             _SettlementLine(
-              label: '\uB9E4\uCD9C',
-              value: money.format(yearRevenue),
+              label: '$_selectedMonth월 매출',
+              value: money.format(selectedSettlement.revenue),
               color: HamsterColors.gold,
             ),
             const SizedBox(height: 8),
             _SettlementLine(
-              label: '\uC6D0\uAC00',
-              value: money.format(yearCost),
+              label: '$_selectedMonth월 원가',
+              value: money.format(selectedSettlement.cost),
               color: HamsterColors.softBrown,
             ),
             const SizedBox(height: 8),
             _SettlementLine(
-              label: '\uC190\uC775',
-              value: money.format(yearProfit),
-              color: yearProfit >= 0 ? HamsterColors.mint : Colors.redAccent,
+              label: '$_selectedMonth월 손익',
+              value: money.format(selectedSettlement.profit),
+              color: selectedSettlement.profit >= 0
+                  ? HamsterColors.mint
+                  : Colors.redAccent,
               emphasize: true,
             ),
             const SizedBox(height: 14),
             const Divider(height: 1, color: HamsterColors.line),
             const SizedBox(height: 10),
-            ...monthly
-                .where((m) => m.revenue != 0 || m.cost != 0)
-                .map(
-                  (m) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: m.month == DateTime.now().month
-                            ? HamsterColors.cream.withValues(alpha: 0.55)
-                            : HamsterColors.input,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: HamsterColors.line),
-                      ),
-                      child: Text(
-                        '${m.month}\uC6D4  \uB9E4\uCD9C ${money.format(m.revenue)} / \uC6D0\uAC00 ${money.format(m.cost)} / \uC190\uC775 ${money.format(m.profit)}',
-                        style: TextStyle(
-                          color: m.profit >= 0
-                              ? HamsterColors.brown
-                              : Colors.redAccent,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: HamsterColors.cream.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: HamsterColors.line),
+              ),
+              child: Text(
+                '$_selectedMonth월  매출 ${money.format(selectedSettlement.revenue)} / 원가 ${money.format(selectedSettlement.cost)} / 손익 ${money.format(selectedSettlement.profit)}',
+                style: TextStyle(
+                  color: selectedSettlement.profit >= 0
+                      ? HamsterColors.brown
+                      : Colors.redAccent,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
                 ),
+              ),
+            ),
           ],
         ),
       ),
@@ -645,7 +715,7 @@ class CustomerFormPage extends StatefulWidget {
   });
 
   final CrmStore repository;
-  final VoidCallback onSaved;
+  final Future<void> Function() onSaved;
 
   @override
   State<CustomerFormPage> createState() => _CustomerFormPageState();
@@ -707,7 +777,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
         updatedAt: now,
       ),
     );
-    widget.onSaved();
+    await widget.onSaved();
     if (mounted) {
       await showDialog<void>(
         context: context,

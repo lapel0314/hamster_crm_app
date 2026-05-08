@@ -46,6 +46,7 @@ class CrmRepository implements CrmStore {
     final where = _searchWhere(query, [
       'customer_name',
       'phone',
+      'date',
       'adoption',
       'purchase',
       'memo',
@@ -65,6 +66,8 @@ class CrmRepository implements CrmStore {
     final where = _searchWhere(query, [
       'customer_name',
       'phone',
+      'consultation_date',
+      'visit_date',
       'adoption',
       'purchase',
       'memo',
@@ -300,6 +303,28 @@ class InMemoryCrmRepository implements CrmStore {
   int _nextCustomerId = 100;
   int _nextProspectId = 100;
 
+  void replaceData({
+    required List<Customer> customers,
+    required List<Prospect> prospects,
+  }) {
+    _customers
+      ..clear()
+      ..addAll(customers);
+    _prospects
+      ..clear()
+      ..addAll(prospects);
+    _nextCustomerId = _nextId(_customers.map((c) => c.id));
+    _nextProspectId = _nextId(_prospects.map((p) => p.id));
+  }
+
+  int _nextId(Iterable<int?> ids) {
+    var maxId = 0;
+    for (final id in ids) {
+      if (id != null && id > maxId) maxId = id;
+    }
+    return maxId + 1;
+  }
+
   @override
   Future<int> addCustomer(Customer customer) async {
     final id = _nextCustomerId++;
@@ -438,27 +463,30 @@ class InMemoryCrmRepository implements CrmStore {
   }
 
   bool _matchesCustomer(Customer c, String query) {
-    final q = query.trim();
+    final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
     return [
       c.customerName,
       c.phone,
+      c.date,
       c.adoption,
       c.purchase,
       c.memo,
-    ].any((value) => value.contains(q));
+    ].any((value) => value.toLowerCase().contains(q));
   }
 
   bool _matchesProspect(Prospect p, String query) {
-    final q = query.trim();
+    final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
     return [
       p.customerName,
       p.phone,
+      p.consultationDate,
+      p.visitDate,
       p.adoption,
       p.purchase,
       p.memo,
-    ].any((value) => value.contains(q));
+    ].any((value) => value.toLowerCase().contains(q));
   }
 
   Customer _copyCustomer(

@@ -26,7 +26,7 @@ class AppDatabase {
         version: 1,
         onConfigure: (db) async {
           await db.execute('PRAGMA foreign_keys = ON');
-          await db.execute('PRAGMA journal_mode = WAL');
+          await db.execute('PRAGMA journal_mode = DELETE');
         },
         onCreate: (db, version) async => _createSchema(db),
       ),
@@ -36,8 +36,40 @@ class AppDatabase {
   }
 
   static Future<String> defaultDatabasePath() async {
-    final dir = await getApplicationSupportDirectory();
-    return p.join(dir.path, 'GoldenHamsterCRM', 'hamster_crm.db');
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final portablePath = p.join(
+      documentsDir.path,
+      'GoldenHamsterCRM',
+      'hamster_crm_data.sqlite',
+    );
+    await _migrateLegacyDatabaseIfNeeded(portablePath);
+    return portablePath;
+  }
+
+  static Future<void> _migrateLegacyDatabaseIfNeeded(
+    String portablePath,
+  ) async {
+    final portableFile = File(portablePath);
+    if (await portableFile.exists()) return;
+
+    final supportDir = await getApplicationSupportDirectory();
+    final legacyPath = p.join(
+      supportDir.path,
+      'GoldenHamsterCRM',
+      'hamster_crm.db',
+    );
+    final legacyFile = File(legacyPath);
+    if (!await legacyFile.exists()) return;
+
+    await Directory(p.dirname(portablePath)).create(recursive: true);
+    await legacyFile.copy(portablePath);
+
+    for (final suffix in ['-wal', '-shm']) {
+      final sidecar = File('$legacyPath$suffix');
+      if (await sidecar.exists()) {
+        await sidecar.copy('$portablePath$suffix');
+      }
+    }
   }
 
   Future<void> _createSchema(Database db) async {

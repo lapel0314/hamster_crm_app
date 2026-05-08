@@ -44,6 +44,54 @@ void main() {
     expect(summary.totalCustomers, 1);
   });
 
+  test(
+    'allows duplicate customer and prospect names and phone numbers',
+    () async {
+      const now = '2026-05-07T00:00:00';
+      const duplicatedPhone = '010-0000-0000';
+
+      await repository.addCustomer(
+        const Customer(
+          date: '2026-05-07',
+          customerName: '중복고객',
+          phone: duplicatedPhone,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repository.addCustomer(
+        const Customer(
+          date: '2026-05-08',
+          customerName: '중복고객',
+          phone: duplicatedPhone,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repository.addProspect(
+        const Prospect(
+          consultationDate: '2026-05-07',
+          customerName: '중복가망',
+          phone: duplicatedPhone,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repository.addProspect(
+        const Prospect(
+          consultationDate: '2026-05-08',
+          customerName: '중복가망',
+          phone: duplicatedPhone,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      expect(await repository.customers(query: '중복고객'), hasLength(2));
+      expect(await repository.prospects(query: '중복가망'), hasLength(2));
+    },
+  );
+
   test('ranking ignores spacing differences', () {
     final ranking = buildRanking(['골든햄스터', '골든 햄스터', ' 골든   햄스터 ']);
 
@@ -67,6 +115,43 @@ void main() {
     expect(await repository.prospects(query: '예비'), hasLength(1));
     expect((await repository.dashboardSummary()).totalProspects, 1);
   });
+
+  test(
+    'searches customer and prospect by date adoption and purchase',
+    () async {
+      const now = '2026-05-07T00:00:00';
+      await repository.addCustomer(
+        const Customer(
+          date: '2026-06-11',
+          customerName: '날짜고객',
+          phone: '010-1111-2222',
+          adoption: '시리아햄스터',
+          purchase: '쳇바퀴',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repository.addProspect(
+        const Prospect(
+          consultationDate: '2026-07-12',
+          visitDate: '2026-07-20',
+          customerName: '검색가망',
+          phone: '010-3333-4444',
+          adoption: '드워프햄스터',
+          purchase: '사료',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      expect(await repository.customers(query: '2026-06'), hasLength(1));
+      expect(await repository.customers(query: '시리아'), hasLength(1));
+      expect(await repository.customers(query: '쳇바퀴'), hasLength(1));
+      expect(await repository.prospects(query: '2026-07-20'), hasLength(1));
+      expect(await repository.prospects(query: '드워프'), hasLength(1));
+      expect(await repository.prospects(query: '사료'), hasLength(1));
+    },
+  );
 
   test('updates and soft deletes customer and prospect records', () async {
     const now = '2026-05-07T00:00:00';
