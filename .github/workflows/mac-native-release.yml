@@ -29,7 +29,9 @@ jobs:
         run: flutter pub get
 
       - name: Build native macOS app
-        run: flutter build macos --release --no-codesign
+        run: flutter build macos --release
+        env:
+          CODE_SIGNING_ALLOWED: NO
 
       - name: Package DMG
         run: |
