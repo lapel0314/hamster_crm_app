@@ -1,0 +1,50 @@
+name: macOS Native Flutter Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to upload macOS DMG asset to
+        required: true
+        default: v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac-native:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Build native macOS app
+        run: flutter build macos --release
+
+      - name: Package DMG
+        run: |
+          set -euo pipefail
+          mkdir -p output/native-mac dmg-root
+          APP="build/macos/Build/Products/Release/뵤펫 CRM.app"
+          test -d "$APP"
+          cp -R "$APP" dmg-root/
+          ln -s /Applications dmg-root/Applications
+          hdiutil create -volname "뵤펫 CRM 1.0.0" -srcfolder dmg-root -ov -format UDZO output/native-mac/CRM-1.0.0.dmg
+          shasum -a 256 output/native-mac/CRM-1.0.0.dmg
+
+      - name: Upload native macOS DMG to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          gh release upload "$TAG" output/native-mac/CRM-1.0.0.dmg --clobber
