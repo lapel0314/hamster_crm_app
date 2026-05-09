@@ -37,11 +37,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p output/native-mac dmg-root
-          APP="build/macos/Build/Products/Release/뵤펫 CRM.app"
+          APP="build/macos/Build/Products/Release/HamsterCRM.app"
           test -d "$APP"
           cp -R "$APP" dmg-root/
           ln -s /Applications dmg-root/Applications
-          hdiutil create -volname "뵤펫 CRM 1.0.0" -srcfolder dmg-root -ov -format UDZO output/native-mac/CRM-1.0.0.dmg
+          hdiutil create -volname "Hamster CRM 1.0.0" -srcfolder dmg-root -ov -format UDZO output/native-mac/CRM-1.0.0.dmg
           shasum -a 256 output/native-mac/CRM-1.0.0.dmg
 
       - name: Upload native macOS DMG to release
