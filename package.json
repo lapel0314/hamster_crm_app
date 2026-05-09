@@ -27,7 +27,9 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -36,13 +38,16 @@
       "target": [
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ]
     }
   },
   "devDependencies": {
-    "electron": "^39.2.6",
+    "electron": "^35.7.5",
     "electron-builder": "^26.0.12"
   }
 }
